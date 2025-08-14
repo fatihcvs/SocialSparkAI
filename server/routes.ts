@@ -14,6 +14,8 @@ import { contentService } from "./services/contentService";
 import { iyzicoService } from "./services/iyzicoService";
 import type { AuthRequest } from "./middlewares/auth";
 import integrationRoutes from "./routes/integrations";
+import autonomousRoutes from "./routes/autonomous";
+import { autonomousScheduler } from "./services/autonomousScheduler";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Security middleware
@@ -380,6 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Integration routes (Zapier/Make webhook)
   app.use("/api/integrations", integrationRoutes);
+  app.use("/api/autonomous", autonomousRoutes);
 
   app.post("/api/posts/:postId/publish", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
     try {
@@ -568,5 +571,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize autonomous system after server creation
+  setTimeout(async () => {
+    console.log("[Server] 🤖 Initializing Autonomous Maintenance System...");
+    try {
+      await autonomousScheduler.start();
+      console.log("[Server] ✅ Autonomous system activated successfully");
+    } catch (error) {
+      console.error("[Server] ❌ Failed to start autonomous system:", error instanceof Error ? error.message : String(error));
+    }
+  }, 5000); // Wait 5 seconds for server to fully initialize
+  
   return httpServer;
 }
