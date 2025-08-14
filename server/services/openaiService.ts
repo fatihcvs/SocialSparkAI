@@ -34,21 +34,37 @@ export class OpenAIService {
     tone: string,
     quantity: number = 5
   ): Promise<IdeasResponse> {
-    const systemPrompt = `Sen bir sosyal medya içerik stratejisti ve metin yazarısın. Platform kurallarına, marka tonuna ve hedef kitleye hassassın. Yanıtlarını daima JSON uyumlu döndür. Türkçe yaz.
+    const systemPrompt = `Sen profesyonel bir sosyal medya içerik stratejistisin. Verilen konu için yaratıcı ve etkileşimli içerik fikirleri üret.
 
-Platform rehberleri:
-- Instagram: kısa, CTA, 5-10 kaliteli hashtag
-- LinkedIn: değer odaklı, mini case/snippet, 1-3 hashtag
-- X: 1-2 cümle, 1-2 hashtag, gerekiyorsa thread öner
-- TikTok: trend odaklı, genç kitle, 3-5 hashtag`;
+MUTLAKA bu JSON formatını kullan:
+{
+  "ideas": [
+    {
+      "title": "İçerik başlığı",
+      "angle": "İçeriğin yaklaşımı",
+      "keyPoints": ["Ana nokta 1", "Ana nokta 2", "Ana nokta 3"],
+      "cta": "Çağrı metni"
+    }
+  ],
+  "calendarHints": ["Pazartesi Sabah", "Çarşamba Öğlen", "Cuma Akşam"]
+}
 
-    const userPrompt = JSON.stringify({
-      topic,
-      platform,
-      targetAudience,
-      tone,
-      quantity,
-    });
+Platform odaklı yaklaşımlar:
+- Instagram: Görsel odaklı, hikaye anlatımı, engagement
+- LinkedIn: Profesyonel değer, bilgi paylaşımı, network
+- X: Kısa ve etkili, gündem, viral potansiyel  
+- TikTok: Trend odaklı, eğlenceli, genç hedef kitle
+
+Her fikir SEÇİLEN PLATFORM için optimize edilmeli.`;
+
+    const userPrompt = `Şu bilgilere göre ${quantity} adet içerik fikri üret:
+
+Konu: ${topic}
+Platform: ${platform}
+Hedef Kitle: ${targetAudience}  
+Ton: ${tone}
+
+Her fikir platform özelliklerine uygun ve hedef kitleye hitap eden olmalı.`;
 
     try {
       const response = await openai.chat.completions.create({
@@ -61,7 +77,8 @@ Platform rehberleri:
         temperature: 0.8,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || "{}");
+      const content = response.choices[0].message.content || "{}";
+      const result = JSON.parse(content);
       
       return {
         calendarHints: result.calendarHints || ["Pazartesi Sabah", "Çarşamba Öğleden Sonra", "Cumartesi Sabah"],
