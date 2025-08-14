@@ -17,7 +17,7 @@ The client-side application is built using modern React 18 with TypeScript, util
 The server-side implementation uses Node.js with Express.js framework, written entirely in TypeScript for type safety. The application follows a service-oriented architecture with clear separation between routes, controllers, middleware, and services. The API implements RESTful endpoints with comprehensive error handling and validation.
 
 ### Data Storage Solutions
-The application uses Drizzle ORM with PostgreSQL (via Neon serverless) for production-ready database operations. The schema includes tables for users, social accounts, content ideas, post assets, subscriptions, and API usage tracking. The database design supports multi-tenancy and includes proper indexing for performance optimization.
+The application uses Drizzle ORM with PostgreSQL (Replit native database) for production-ready database operations. The database includes 7 tables: users, social_accounts, content_ideas, post_assets, subscriptions, api_usage, and sessions. The schema supports multi-tenancy, JWT authentication sessions, and includes proper indexing for performance optimization. Database migration handled via `npm run db:push`.
 
 ### Authentication and Authorization
 Security is implemented through JWT-based authentication with bcrypt for password hashing. The system includes comprehensive middleware for token validation, rate limiting (both user-based and IP-based), and plan-based feature access control. Additional security measures include Helmet for HTTP headers, CORS configuration, and Express rate limiting.
@@ -26,7 +26,7 @@ Security is implemented through JWT-based authentication with bcrypt for passwor
 AI-powered content generation is handled through OpenAI's APIs, specifically using GPT-4o for text generation and DALL-E 3 for image creation. The system includes intelligent prompting strategies tailored for different social media platforms (Instagram, LinkedIn, Twitter/X, TikTok) with customizable tone and target audience parameters.
 
 ### Social Media Integration
-Social media posting and scheduling is managed through Buffer API integration, supporting multiple platforms with automated posting capabilities. The system includes a robust scheduling mechanism using node-cron for timed post execution and status tracking.
+Primary integration through Zapier/Make webhooks (Pro feature) with Buffer API as fallback. When ZAPIER_HOOK_URL is configured, the system sends posts to Zapier webhook endpoints for flexible social media automation. Buffer integration disabled when Zapier is active. Supports Instagram, LinkedIn, Twitter/X, and TikTok platforms with scheduling via node-cron.
 
 ### Payment Processing
 Subscription management is implemented using Stripe with support for both one-time payments and recurring subscriptions. The system handles webhook events for subscription status updates and includes proper plan-based feature gating.
@@ -40,7 +40,7 @@ The application includes a background job scheduler using node-cron for processi
 - **OpenAI API**: Powers content generation through GPT-4o for text and DALL-E 3 for images
 - **Buffer API**: Handles social media post scheduling and publishing across multiple platforms
 - **Stripe**: Manages subscription billing, payment processing, and customer management
-- **Neon Database**: Provides serverless PostgreSQL hosting with automatic scaling
+- **Replit PostgreSQL**: Native Replit database with automatic provisioning and environment variables
 
 ### Key Libraries and Frameworks
 - **React 18 + TypeScript**: Frontend framework with type safety

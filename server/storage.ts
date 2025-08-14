@@ -18,7 +18,7 @@ import {
   type ApiUsage,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, count, gte, sql } from "drizzle-orm";
+import { eq, and, desc, count, gte, lte, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -281,7 +281,7 @@ export class DatabaseStorage implements IStorage {
           eq(apiUsage.userId, userId),
           eq(apiUsage.endpoint, endpoint),
           gte(apiUsage.date, startOfDay),
-          gte(endOfDay, apiUsage.date)
+          lte(apiUsage.date, endOfDay)
         )
       );
 
