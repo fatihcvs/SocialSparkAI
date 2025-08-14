@@ -3,6 +3,7 @@ import QuickStart from "@/components/QuickStart";
 import ContentCalendar from "@/components/ContentCalendar";
 import AITools from "@/components/AITools";
 import RecentPosts from "@/components/RecentPosts";
+import { GitHubSyncNotification } from "@/components/GitHubSyncNotification";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, CalendarCheck, Brain, Zap } from "lucide-react";
 import type { UserStats } from "@/types";
@@ -30,6 +31,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
+      {/* GitHub Sync Notification */}
+      <GitHubSyncNotification />
+      
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
@@ -97,7 +101,7 @@ export default function Dashboard() {
               <div className="ml-4">
                 <div className="text-sm font-medium text-slate-500">Günlük Limit</div>
                 <div className="text-2xl font-semibold text-slate-900" data-testid="stat-daily-limit">
-                  --
+                  {stats?.dailyUsage || 0}/{stats?.dailyLimit || 0}
                 </div>
               </div>
             </div>

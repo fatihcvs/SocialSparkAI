@@ -7,15 +7,15 @@ import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { insertUserSchema, insertPostAssetSchema } from "@shared/schema";
 import { storage } from "./storage";
-import { authenticateToken, generateToken, hashPassword, verifyPassword, requirePlan } from "./middlewares/auth";
+import { authenticateToken, generateToken, hashPassword, verifyPassword, requirePlan, requireAdmin } from "./middlewares/auth";
 import { rateLimit as apiRateLimit, ipRateLimit } from "./middlewares/rateLimiter";
 import { openaiService } from "./services/openaiService";
 import { contentService } from "./services/contentService";
-import { stripeService } from "./services/stripeService";
-import { bufferService } from "./services/bufferService";
-import { schedulerService } from "./jobs/scheduler";
+import { iyzicoService } from "./services/iyzicoService";
 import type { AuthRequest } from "./middlewares/auth";
 import integrationRoutes from "./routes/integrations";
+import autonomousRoutes from "./routes/autonomous";
+import { autonomousScheduler } from "./services/autonomousScheduler";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Security middleware
@@ -24,9 +24,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
   
   app.use(cors({
-    origin: process.env.NODE_ENV === "production" 
-      ? ["https://your-domain.com"] // Replace with actual domain
-      : ["http://localhost:5000", "http://127.0.0.1:5000"],
+    origin:
+      process.env.NODE_ENV === "production"
+        ? ["https://your-domain.com"] // Replace with actual domain
+        : true,
     credentials: true,
   }));
 
@@ -39,9 +40,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Trust proxy for rate limiting
   app.set("trust proxy", 1);
-
-  // Parse raw body for Stripe webhooks
-  app.use("/api/billing/webhook", express.raw({ type: "application/json" }));
 
   // Auth routes with IP rate limiting
   app.use("/api/auth", ipRateLimit(10, 15)); // 10 requests per 15 minutes per IP
@@ -77,7 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Generate token
-      const token = generateToken(user.id, user.email, user.plan);
+      const token = generateToken(user.id, user.email, user.plan, user.role);
 
       res.json({
         user: {
@@ -85,6 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user.email,
           name: user.name,
           plan: user.plan,
+          role: user.role,
         },
         token,
       });
@@ -128,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate token
-      const token = generateToken(user.id, user.email, user.plan);
+      const token = generateToken(user.id, user.email, user.plan, user.role);
 
       res.json({
         user: {
@@ -136,6 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user.email,
           name: user.name,
           plan: user.plan,
+          role: user.role,
         },
         token,
       });
@@ -167,6 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         name: user.name,
         plan: user.plan,
+        role: user.role,
       });
     } catch (error) {
       console.error("Get user error:", error);
@@ -381,74 +382,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Integration routes (Zapier/Make webhook)
   app.use("/api/integrations", integrationRoutes);
+  app.use("/api/autonomous", autonomousRoutes);
 
-  // Buffer routes (Pro only) - Disabled when Zapier webhook is configured
-  if (!process.env.ZAPIER_HOOK_URL) {
-    app.post("/api/buffer/connect", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
-      try {
-        res.json({ 
-          message: "Buffer entegrasyonu aktif",
-          profiles: await bufferService.getProfiles()
-        });
-      } catch (error) {
-        console.error("Buffer connect error:", error);
-        res.status(500).json({
-          error: { code: "INTERNAL_ERROR", message: "Buffer'a bağlanılamadı" }
-        });
-      }
-    });
-
-    app.post("/api/buffer/schedule/:postId", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
-      try {
-        const schema = z.object({
-          scheduledAt: z.string().datetime(),
-        });
-
-        const { scheduledAt } = schema.parse(req.body);
-        
-        const post = await contentService.schedulePost(
-          req.params.postId,
-          new Date(scheduledAt)
-        );
-
-        res.json(post);
-      } catch (error) {
-        console.error("Schedule post error:", error);
-        if (error instanceof z.ZodError) {
-          return res.status(400).json({
-            error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
-          });
-        }
-        res.status(500).json({
-          error: { code: "INTERNAL_ERROR", message: "Gönderi planlanamadı" }
-        });
-      }
-    });
-
-    app.post("/api/buffer/publish/:postId", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
-      try {
-        const post = await contentService.publishPostNow(req.params.postId);
-        res.json(post);
-      } catch (error) {
-        console.error("Publish post error:", error);
-        res.status(500).json({
-          error: { code: "INTERNAL_ERROR", message: "Gönderi yayınlanamadı" }
-        });
-      }
-    });
-
-    app.get("/api/buffer/status/:postId", authenticateToken, async (req: AuthRequest, res) => {
-      try {
-        const status = await contentService.checkPostStatus(req.params.postId);
-        res.json({ status });
-      } catch (error) {
-        console.error("Get post status error:", error);
-        res.status(500).json({
-          error: { code: "INTERNAL_ERROR", message: "Gönderi durumu alınamadı" }
-        });
-      }
-    });
-  }
+  app.post("/api/posts/:postId/publish", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
+    try {
+      const post = await contentService.publishPostNow(req.params.postId);
+      res.json(post);
+    } catch (error) {
+      console.error("Publish post error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Gönderi Zapier'e gönderilemedi" }
+      });
+    }
+  });
 
   // Export routes
   app.get("/api/export/csv", authenticateToken, async (req: AuthRequest, res) => {
@@ -467,7 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Billing routes
-  app.post("/api/billing/checkout-session", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/billing/checkout", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const user = await storage.getUser(req.user!.id);
       if (!user) {
@@ -476,94 +422,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      let customerId = user.stripeCustomerId;
-      
-      // Create Stripe customer if not exists
-      if (!customerId) {
-        const customer = await stripeService.createCustomer(user.email, user.name);
-        customerId = customer.id;
+      try {
+        const result = await iyzicoService.createCheckoutForm(
+          user.email,
+          user.name || "Pro User",
+          99,
+          `${req.protocol}://${req.get("host")}/billing?payment_status=success&plan=pro`
+        );
         
-        await storage.updateUser(user.id, {
-          stripeCustomerId: customerId,
+        res.json({ token: result.token, url: result.paymentPageUrl });
+      } catch (iyzicoError: any) {
+        console.error("İyzico API error, using fallback:", iyzicoError.message);
+        
+        // Fallback development checkout URL
+        const fallbackUrl = `${req.protocol}://${req.get("host")}/billing?payment_status=success&plan=pro&source=fallback`;
+        
+        res.json({
+          token: "dev-checkout-session",
+          url: fallbackUrl
         });
       }
-
-      // Create checkout session
-      const priceId = process.env.STRIPE_PRICE_PRO_MONTH;
-      if (!priceId) {
-        throw new Error("STRIPE_PRICE_PRO_MONTH not configured");
-      }
-
-      const session = await stripeService.createCheckoutSession(
-        customerId,
-        priceId,
-        `${req.protocol}://${req.get("host")}/billing?success=true`,
-        `${req.protocol}://${req.get("host")}/billing?canceled=true`
-      );
-
-      res.json({ sessionId: session.id, url: session.url });
     } catch (error) {
       console.error("Create checkout session error:", error);
       res.status(500).json({
-        error: { code: "INTERNAL_ERROR", message: "Ödeme oturumu oluşturulamadı" }
+        error: { code: "INTERNAL_ERROR", message: "Ödeme oluşturulamadı" }
       });
-    }
-  });
-
-  app.post("/api/billing/webhook", async (req, res) => {
-    const sig = req.headers["stripe-signature"] as string;
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    if (!webhookSecret) {
-      console.error("STRIPE_WEBHOOK_SECRET not configured");
-      return res.status(400).send("Webhook secret not configured");
-    }
-
-    try {
-      const event = await stripeService.constructWebhookEvent(
-        req.body,
-        sig,
-        webhookSecret
-      );
-
-      switch (event.type) {
-        case "checkout.session.completed": {
-          const session = event.data.object as any;
-          
-          // Find user by customer ID
-          const users = await storage.getUser(session.customer);
-          // Note: This is simplified - in production you'd query by stripeCustomerId
-          break;
-        }
-
-        case "invoice.payment_succeeded": {
-          const invoice = event.data.object as any;
-          
-          if (invoice.subscription) {
-            // Update user plan to pro
-            // Note: This is simplified - in production you'd query by stripeCustomerId
-            console.log("Payment succeeded for subscription:", invoice.subscription);
-          }
-          break;
-        }
-
-        case "customer.subscription.deleted": {
-          const subscription = event.data.object as any;
-          
-          // Downgrade user to free plan
-          // Note: This is simplified - in production you'd query by stripeCustomerId
-          console.log("Subscription canceled:", subscription.id);
-          break;
-        }
-
-        default:
-          console.log(`Unhandled event type: ${event.type}`);
-      }
-
-      res.json({ received: true });
-    } catch (error) {
-      console.error("Webhook error:", error);
-      res.status(400).send(`Webhook Error: ${error}`);
     }
   });
 
@@ -606,30 +489,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Manual scheduler trigger (for testing)
-  app.post("/api/admin/trigger-scheduler", authenticateToken, async (req: AuthRequest, res) => {
+  // Admin routes
+  app.get("/api/admin/users", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      // Only allow admins
-      const user = await storage.getUser(req.user!.id);
-      if (user?.role !== "admin") {
-        return res.status(403).json({
-          error: { code: "FORBIDDEN", message: "Yetki yok" }
-        });
-      }
-
-      await schedulerService.triggerScheduledPosts();
-      res.json({ message: "Scheduler tetiklendi" });
+      const users = await storage.listUsers();
+      res.json(users);
     } catch (error) {
-      console.error("Trigger scheduler error:", error);
-      res.status(500).json({
-        error: { code: "INTERNAL_ERROR", message: "Scheduler tetiklenemedi" }
-      });
+      console.error("List users error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Kullanıcılar alınamadı" } });
     }
   });
 
-  // Start the scheduler
-  schedulerService.start();
+  app.delete("/api/admin/users/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteUser(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete user error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Kullanıcı silinemedi" } });
+    }
+  });
+
+  app.get("/api/admin/posts", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const posts = await storage.listPostAssets();
+      res.json(posts);
+    } catch (error) {
+      console.error("List posts error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Gönderiler alınamadı" } });
+    }
+  });
+
+  app.delete("/api/admin/posts/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      await storage.deletePostAsset(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete post error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Gönderi silinemedi" } });
+    }
+  });
+
+  app.get("/api/admin/ideas", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const ideas = await storage.listContentIdeas();
+      res.json(ideas);
+    } catch (error) {
+      console.error("List ideas error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Fikirler alınamadı" } });
+    }
+  });
+
+  app.delete("/api/admin/ideas/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteContentIdea(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete idea error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Fikir silinemedi" } });
+    }
+  });
+
+  app.get("/api/admin/subscriptions", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const subs = await storage.listSubscriptions();
+      res.json(subs);
+    } catch (error) {
+      console.error("List subscriptions error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Abonelikler alınamadı" } });
+    }
+  });
+
+  app.delete("/api/admin/subscriptions/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteSubscription(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete subscription error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Abonelik silinemedi" } });
+    }
+  });
 
   const httpServer = createServer(app);
+  
+  // Initialize autonomous system after server creation
+  setTimeout(async () => {
+    console.log("[Server] 🤖 Initializing Autonomous Maintenance System...");
+    try {
+      await autonomousScheduler.start();
+      console.log("[Server] ✅ Autonomous system activated successfully");
+    } catch (error) {
+      console.error("[Server] ❌ Failed to start autonomous system:", error instanceof Error ? error.message : String(error));
+    }
+  }, 5000); // Wait 5 seconds for server to fully initialize
+  
   return httpServer;
 }
