@@ -1,4 +1,3 @@
-```javascript
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
@@ -25,25 +24,3 @@ pool.on('connect', (client) => {
 
 // Initialize the database with the drizzle ORM
 export const db = drizzle({ client: pool, schema });
-
-// Add necessary indexes to improve query performance
-async function createIndexes() {
-  try {
-    await db.query(`
-      CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
-      CREATE INDEX IF NOT EXISTS idx_order_date ON orders(order_date);
-      CREATE INDEX IF NOT EXISTS idx_product_category ON products(category_id);
-    `);
-  } catch (error) {
-    console.error("Error creating indexes:", error);
-  }
-}
-
-// Call the function to create indexes
-createIndexes();
-```
-
-### Explanation:
-1. **Connection Pool Optimization**: Added session-level settings to optimize query performance, such as setting a statement timeout and adjusting memory settings.
-2. **Index Creation**: Added a function `createIndexes` to create indexes on commonly queried columns, which can significantly improve query performance.
-3. **Error Handling**: Included error handling for index creation to ensure any issues are logged for debugging.
