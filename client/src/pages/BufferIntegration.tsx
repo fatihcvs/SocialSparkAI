@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import type { User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Share2, 
@@ -25,12 +26,17 @@ interface BufferProfile {
   service_username: string;
 }
 
+interface ConnectionStatus {
+  profiles?: BufferProfile[];
+  [key: string]: any;
+}
+
 export default function BufferIntegration() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user } = useAuth() as { user: User | null };
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const { data: connectionStatus } = useQuery({
+  const { data: connectionStatus } = useQuery<ConnectionStatus>({
     queryKey: ["/api/buffer/connect"],
     enabled: user?.plan === "pro",
     retry: false,
