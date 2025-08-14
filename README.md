@@ -91,7 +91,16 @@ cp .env.example .env
 npm run dev
 ```
 
-### 4. Stripe Webhook Test (Geliştirme)
+### 4. Zapier Webhook Kurulumu (Pro Özellik)
+ZAPIER_HOOK_URL'yi Replit Secrets'a ekleyin:
+
+1. Zapier'da yeni Zap oluşturun
+2. Trigger: "Webhooks by Zapier" > "Catch Hook"
+3. Webhook URL'ni alın (örn: https://hooks.zapier.com/hooks/catch/12345/abcde)
+4. Replit Secrets'ta `ZAPIER_HOOK_URL` olarak ekleyin
+5. Test için örnek cURL çalıştırın
+
+### 5. Stripe Webhook Test (Geliştirme)
 Stripe webhook'larını test etmek için Stripe CLI kullanın:
 
 ```bash
@@ -149,10 +158,14 @@ Sırayla şu testleri yapın ve tümünün çalıştığından emin olun:
    # Beklenen: Post oluşturulmalı
    ```
 
-7. **Buffer Entegrasyonu** (Pro Plan Gerekli)
-   - Post kartında "Schedule via Buffer" butonuna tıklayın
-   - Buffer'a taslak/zamanlanmış gönderi gitmeli
-   - Status "scheduled" olmalı
+7. **Zapier/Make Webhook Entegrasyonu** (Pro Plan Gerekli)
+   ```bash
+   curl -X POST https://<replit-url>/api/integrations/zapier/publish \
+     -H "Authorization: Bearer <your-token>" \
+     -H "Content-Type: application/json" \
+     -d '{"caption":"Hello from SocialSparkAI 🚀","imageUrl":"https://picsum.photos/800","platform":"instagram","scheduledAt":"2025-08-20T10:00:00Z"}'
+   # Beklenen: 202 {"ok":true} ve Zapier'de webhook tetiklenmeli
+   ```
 
 8. **Otomatik Yayınlama**
    - Zamanlanan bir gönderi oluşturun (5 dakika sonrası)

@@ -1,0 +1,85 @@
+Görev: SocialSparkAI’yi çalışır MVP’ye getir. Zapier webhook pivotunu denetle, eksikler varsa tamamla, tek ORM olarak Drizzle’ı kullan, güvenlik & .env & test adımlarını hazırla.
+
+1) Env & README
+
+Kök .env.example içindeki anahtarları doğrula/ekle:
+
+NODE_ENV=development
+PORT=
+DATABASE_URL=postgres://... # (Drizzle/Postgres) – Replit’te yoksa geçici sqlite kullan
+JWT_SECRET=
+OPENAI_API_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_PRO_MONTH=
+ZAPIER_HOOK_URL=
+BUFFER_ACCESS_TOKEN=
+BUFFER_PROFILE_ID=
+VITE_API_BASE_URL=
+VITE_STRIPE_PUBLISHABLE_KEY=
+
+
+README’de Zapier “Catch Hook” kurulumunu ve örnek cURL’ü güncelle (aşağıdaki endpoint ismiyle birebir).
+
+2) Server altyapısı
+
+server/src/index.(ts|js) içinde helmet, cors, express.json, express-rate-limit ekle; app.get('/api/health') ile health-check ekle; port process.env.PORT.
+
+Router bağla: app.use('/api/integrations', integrationsRouter) (yoksa oluştur).
+
+3) Zapier webhook rotası
+
+server/src/routes/integrations.(ts|js) oluştur/güncelle:
+
+POST /api/integrations/zapier/publish
+
+Body Zod ile doğrulansın: { caption: string; imageUrl?: string; platform?: string; scheduledAt?: string }
+
+axios.post(process.env.ZAPIER_HOOK_URL!, body) → başarıda res.status(202).json({ok:true}), hata res.status(502).json({ok:false, error:'ForwardFailed', detail}).
+
+!process.env.ZAPIER_HOOK_URL ise 400 {error:'MissingHook'} dön.
+
+4) ORM tekilleştirme (Drizzle)
+
+Drizzle kalacak: Drizzle dışındaki ORM dosyalarını/komutlarını temizle.
+
+Migration/seed komutlarını package.json’a ekle (dev ortamda sqlite istersen better-sqlite3 ile de çalışabilir).
+
+5) Client güncellemesi
+
+“Schedule via Buffer” butonunu “Send to Zapier/Make” yap ve POST /api/integrations/zapier/publish’e isteği gönder.
+
+VITE_API_BASE_URL kullanılarak çağrı yapılsın; ZAPIER_HOOK_URL yoksa buton gizlensin.
+
+6) Script’ler
+
+Kök package.json’a şu scriptleri ekle/güncelle:
+
+"dev": "npm --prefix server run dev & npm --prefix client run dev"
+
+"start": "npm --prefix server run start"
+
+"postinstall": "npm --prefix server i && npm --prefix client i"
+
+7) Testler (README’ye de yaz)
+
+Health: GET /api/health → {"ok":true}
+
+Ideas: POST /api/ai/generate/ideas → 3+ fikir JSON
+
+Caption/Image: ilgili endpointler 200 döner
+
+Zapier publish (örnek cURL):
+
+curl -X POST "$API_BASE/api/integrations/zapier/publish" \
+ -H "Content-Type: application/json" \
+ -d '{"caption":"Hello from SocialSparkAI 🚀","imageUrl":"https://picsum.photos/800","platform":"instagram","scheduledAt":"2025-08-20T10:00:00Z"}'
+
+
+Beklenen: 202 {"ok":true} ve Zapier’de talep görünür.
+
+Stripe checkout/webhook testi (README’deki test kartı ile).
+
+8) Çıktı
+
+Değiştirilen/eklenen dosyaları, eklenen paketleri ve çalıştırma komutlarını özet olarak yaz.
