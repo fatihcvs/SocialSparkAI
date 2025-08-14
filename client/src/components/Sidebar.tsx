@@ -51,8 +51,30 @@ export default function Sidebar() {
         {navigation.map((item) => {
           const isActive = location === item.href;
           return (
-            <Link key={item.name} href={item.href}>
-              <a 
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                "flex items-center px-3 py-2 text-sm font-medium rounded-lg group transition-colors",
+                isActive
+                  ? "text-blue-600 bg-blue-50"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              )}
+              data-testid={`link-nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+            >
+              <item.icon className="w-5 h-5 mr-3" />
+              {item.name}
+            </Link>
+          );
+        })}
+        
+        <div className="pt-4 mt-4 border-t border-slate-200">
+          {secondaryNavigation.map((item) => {
+            const isActive = location === item.href;
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
                 className={cn(
                   "flex items-center px-3 py-2 text-sm font-medium rounded-lg group transition-colors",
                   isActive
@@ -63,28 +85,6 @@ export default function Sidebar() {
               >
                 <item.icon className="w-5 h-5 mr-3" />
                 {item.name}
-              </a>
-            </Link>
-          );
-        })}
-        
-        <div className="pt-4 mt-4 border-t border-slate-200">
-          {secondaryNavigation.map((item) => {
-            const isActive = location === item.href;
-            return (
-              <Link key={item.name} href={item.href}>
-                <a 
-                  className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium rounded-lg group transition-colors",
-                    isActive
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                  )}
-                  data-testid={`link-nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                >
-                  <item.icon className="w-5 h-5 mr-3" />
-                  {item.name}
-                </a>
               </Link>
             );
           })}
@@ -113,15 +113,14 @@ export default function Sidebar() {
               <p className="text-xs text-slate-600 mb-3" data-testid="text-usage-limit">
                 Günlük AI çağrısı limitiniz
               </p>
-              <Link href="/billing">
-                <Button 
-                  size="sm" 
-                  className="w-full text-xs"
-                  data-testid="button-upgrade"
-                >
-                  Pro'ya Yükselt
-                </Button>
-              </Link>
+              <Button
+                asChild
+                size="sm"
+                className="w-full text-xs"
+                data-testid="button-upgrade"
+              >
+                <Link href="/billing">Pro'ya Yükselt</Link>
+              </Button>
             </>
           )}
         </div>
