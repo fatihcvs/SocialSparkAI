@@ -1,4 +1,3 @@
-```javascript
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
@@ -32,4 +31,3 @@ pool.on('connect', (client) => {
 
 // Initialize the database with the drizzle ORM
 export const db = drizzle({ client: pool, schema });
-```
