@@ -308,7 +308,7 @@ export class AutonomousScheduler {
       
     } catch (error) {
       console.error("[AutonomousScheduler] Auto-fix execution error:", error);
-      this.logSystemEvent("AUTO_FIX_ERROR", `Fix execution failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logSystemEvent("AUTO_FIX_ERROR", `Fix execution failed: ${error.message}`);
     } finally {
       this.activeFixes.delete(fixId);
     }

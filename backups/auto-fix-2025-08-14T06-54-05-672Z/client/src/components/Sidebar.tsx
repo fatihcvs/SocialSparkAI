@@ -12,8 +12,7 @@ import {
   Share2,
   CreditCard,
   Settings,
-  Shield,
-  Activity
+  Shield
 } from "lucide-react";
 
 const navigation = [
@@ -24,7 +23,6 @@ const navigation = [
   { name: "Görsel Oluştur", href: "/image-generation", icon: Image },
   { name: "Zapier Entegrasyonu", href: "/zapier-integration", icon: Share2 },
   { name: "Admin Paneli", href: "/admin", icon: Shield, admin: true },
-  { name: "🤖 Live Monitor", href: "/live-monitoring", icon: Activity, admin: true },
 ];
 
 const secondaryNavigation = [
