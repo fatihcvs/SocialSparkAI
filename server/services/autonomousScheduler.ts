@@ -30,12 +30,12 @@ export class AutonomousScheduler {
   private activeFixes = new Set<string>();
   
   private config: SchedulerConfig = {
-    healthCheckInterval: "*/5 * * * *", // Every 5 minutes
-    aiAnalysisInterval: "*/15 * * * *", // Every 15 minutes  
+    healthCheckInterval: "*/2 * * * *", // Every 2 minutes - Enhanced for 1-hour intensive development
+    aiAnalysisInterval: "*/3 * * * *", // Every 3 minutes - Increased frequency for continuous improvement
     maintenanceInterval: "0 2 * * *", // Daily at 2 AM
     emergencyResponseEnabled: true,
-    maxConcurrentFixes: 3,
-    quietHours: { start: "23:00", end: "07:00" }
+    maxConcurrentFixes: 5, // Increased from 3 to 5 for parallel processing
+    quietHours: { start: "23:00", end: "05:00" } // Reduced quiet hours for more active development
   };
 
   static getInstance(): AutonomousScheduler {
@@ -110,10 +110,8 @@ export class AutonomousScheduler {
     const schedule = this.config.aiAnalysisInterval;
     
     const job = cron.schedule(schedule, async () => {
-      if (this.isQuietHours()) {
-        console.log("[AutonomousScheduler] Skipping AI analysis during quiet hours");
-        return;
-      }
+      // Skip quiet hours check for intensive development mode
+      console.log("[AutonomousScheduler] 🤖 INTENSIVE MODE: Executing SocialSparkAI-focused AI analysis...");
       await this.executeAIAnalysis();
     }, {
       scheduled: false,
@@ -123,7 +121,7 @@ export class AutonomousScheduler {
     this.registerTask(taskName, schedule, job);
     job.start();
     
-    console.log(`[AutonomousScheduler] Scheduled AI analysis: ${schedule}`);
+    console.log(`[AutonomousScheduler] 🚀 INTENSIVE MODE: Scheduled AI analysis: ${schedule}`);
   }
 
   private async scheduleMaintenance(): Promise<void> {
@@ -193,14 +191,18 @@ export class AutonomousScheduler {
     try {
       this.updateTaskStatus(taskName, true);
       
-      console.log("[AutonomousScheduler] 🤖 Executing AI system analysis...");
+      console.log("[AutonomousScheduler] 🤖 INTENSIVE MODE: Executing SocialSparkAI-focused AI analysis...");
       const analysis = await aiAnalyzer.analyzeSystemHealth();
       
-      console.log(`[AutonomousScheduler] Analysis: ${analysis.summary} (Urgency: ${analysis.urgency}/10)`);
+      console.log(`[AutonomousScheduler] 🎯 SocialSparkAI Analysis: ${analysis.summary} (Urgency: ${analysis.urgency}/10)`);
       
-      // Auto-fix high urgency issues immediately
-      if (analysis.urgency >= 7 && analysis.autoFixable) {
+      // In intensive mode, auto-fix medium to high urgency issues (lowered threshold from 7 to 5)
+      if (analysis.urgency >= 5 && analysis.autoFixable) {
+        console.log("[AutonomousScheduler] 🔧 INTENSIVE MODE: Auto-fixing detected issue...");
         await this.executeAutoFix(analysis);
+      } else if (analysis.urgency >= 3) {
+        console.log("[AutonomousScheduler] 📋 INTENSIVE MODE: Logging improvement opportunity...");
+        // Log for potential future fixes
       }
       
       this.updateTaskStatus(taskName, false, false);
