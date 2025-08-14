@@ -1,0 +1,268 @@
+Replit Agent Görevi — SocialSparkAI MVP düzeltmeleri
+
+ROL: Kıdemli full-stack mühendis.
+HEDEF: Mevcut repo’yu (SocialSparkAI) çalışır MVP’ye getirmek. Aşağıdaki adımları sırayla uygula, gerekli dosyaları oluştur/güncelle, ardından çalıştırıp test et. Değiştirdiğin dosyaların özetini en sonda yaz.
+
+1) Ortam değişkenleri ve .env.example
+
+Proje kökünde .env.example yoksa oluştur ve aşağıdaki anahtarları ekle:
+
+# SERVER
+NODE_ENV=development
+PORT=
+DATABASE_URL="file:./dev.db"
+JWT_SECRET=change_this_long_random_string
+
+OPENAI_API_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_PRO_MONTH=
+
+BUFFER_ACCESS_TOKEN=
+BUFFER_PROFILE_ID=
+
+# CLIENT
+VITE_API_BASE_URL=
+VITE_STRIPE_PUBLISHABLE_KEY=
+
+
+README’ye “Replit Secrets bölümünden doldurun” notu ekle.
+
+Replit portunu hardcode etme. PORT boş bırakılırsa process.env.PORT kullanılsın.
+
+2) ORM temizliği (Prisma’yı seç)
+
+Repoda Drizzle ile ilgili dosyalar/ayarlar varsa kaldır: drizzle.config.*, drizzle/ klasörü, ilgili paketler.
+
+server içinde Prisma’yı kurulu ve çalışır hale getir:
+
+server/src/prisma/schema.prisma oluştur/güncelle:
+
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "sqlite"; url = env("DATABASE_URL") }
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String
+  name            String?
+  role            String   @default("user")
+  plan            String   @default("free")
+  createdAt       DateTime @default(now())
+  socialAccounts  SocialAccount[]
+  contentIdeas    ContentIdea[]
+  postAssets      PostAsset[]
+  subscriptions   Subscription[]
+}
+
+model SocialAccount {
+  id         String   @id @default(cuid())
+  userId     String
+  provider   String
+  accessToken String?
+  profileId  String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model ContentIdea {
+  id            String   @id @default(cuid())
+  userId        String
+  topic         String
+  targetAudience String?
+  tone          String?
+  platform      String
+  ideas         Json
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model PostAsset {
+  id          String   @id @default(cuid())
+  userId      String
+  ideaId      String?
+  caption     String
+  hashtags    String?
+  imageUrl    String?
+  scheduledAt DateTime?
+  status      String    @default("draft")
+  externalId  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id])
+  idea        ContentIdea? @relation(fields: [ideaId], references: [id])
+}
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  status               String?
+  currentPeriodEnd     DateTime?
+  user                 User     @relation(fields: [userId], references: [id])
+}
+
+
+server/package.json bağımlılıkları kontrol et/ekle: prisma, @prisma/client, bcrypt, jsonwebtoken, zod, express, cors, helmet, express-rate-limit, multer, node-cron, stripe, openai, axios.
+
+Scriptler:
+
+"prisma:generate": "prisma generate"
+
+"prisma:migrate": "prisma migrate dev --name init"
+
+"seed": "ts-node src/prisma/seed.ts" (seed dosyasını oluştur – demo kullanıcı ekle)
+
+Seed içeriği (server/src/prisma/seed.ts):
+
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+const db = new PrismaClient();
+async function main() {
+  const passwordHash = await bcrypt.hash('demo1234', 10);
+  const user = await db.user.upsert({
+    where: { email: 'demo@demo.com' },
+    update: {},
+    create: { email: 'demo@demo.com', passwordHash, name: 'Demo User' }
+  });
+  console.log('Seeded user:', user.email);
+}
+main().finally(()=>db.$disconnect());
+
+3) Server: Express yapılandırması
+
+server/src/index.ts (veya app.ts) dosyasını oluştur/güncelle:
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import path from 'path';
+
+const app = express();
+app.use(express.json({ limit: '2mb' }));
+app.use(helmet());
+app.use(cors({ origin: true, credentials: true }));
+
+app.use(rateLimit({ windowMs: 60_000, max: 60 }));
+
+// routes
+import auth from './routes/auth';
+import ai from './routes/ai';
+import posts from './routes/posts';
+import billing from './routes/billing';
+import buffer from './routes/buffer';
+
+app.use('/api/auth', auth);
+app.use('/api/ai', ai);
+app.use('/api/posts', posts);
+app.use('/api/billing', billing);
+app.use('/api/buffer', buffer);
+
+// health
+app.get('/api/health', (_req,res)=>res.json({ok:true}));
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, ()=> console.log(`API on ${PORT}`));
+
+
+Auth middleware: server/src/middlewares/auth.ts oluştur (JWT doğrulayan).
+
+CORS notu: origin: true kalsın; client URL’si Replit domain’i olacak.
+
+4) AI servisleri ve rotalar
+
+server/src/services/openaiService.ts: Chat + Image endpoint’lerini sarmala (OpenAI SDK).
+
+server/src/routes/ai.ts içinde üç rota yaz:
+
+POST /generate/ideas
+
+POST /generate/caption
+
+POST /generate/image
+Prompt şablonlarını JSON dönecek şekilde uygula (platforma göre hashtag sayısı vs).
+
+5) Post CRUD ve Buffer entegrasyonu
+
+server/src/routes/posts.ts: CRUD + listeleme & filtre.
+
+server/src/services/bufferService.ts: Buffer API istekleri (taslak/schedule).
+
+server/src/routes/buffer.ts:
+
+POST /schedule/:postId → Buffer’a gönder, externalId kaydet, status=scheduled.
+
+GET /status/:postId → durum sorgula.
+
+server/src/jobs/scheduler.ts: node-cron ile her 5 dakikada scheduledAt<=now && status='scheduled' postları publish etmeye çalış.
+
+6) Stripe ödeme (MVP)
+
+server/src/routes/billing.ts:
+
+POST /checkout-session → STRIPE_PRICE_PRO_MONTH ile Checkout Session oluştur.
+
+POST /webhook → imzayı STRIPE_WEBHOOK_SECRET ile doğrula; Subscription ve User.plan güncelle.
+
+README’ye Stripe test kartı ve CLI talimatını ekle:
+
+stripe listen --forward-to https://<replit-url>/api/billing/webhook
+
+7) Client (Vite + TS + Tailwind + shadcn)
+
+client içinde giriş/kayıt sayfaları, Dashboard, Posts listesi, “Generate Ideas/Caption/Image” panelleri, Billing ekranı ve Settings ekranı için basit sayfalar oluştur.
+
+API tabanı import.meta.env.VITE_API_BASE_URL olsun.
+
+Auth token’ı localStorage’da tut; isteklerde Authorization: Bearer gönder.
+
+“Schedule via Buffer” butonu ekle (post kartında).
+
+8) Root script’leri ve çalışma
+
+Kök package.json yoksa oluştur; varsa şu scriptleri ekle/güncelle:
+
+{
+  "scripts": {
+    "dev": "npm --prefix server run dev & npm --prefix client run dev",
+    "start": "npm --prefix server run start",
+    "postinstall": "npm --prefix server i && npm --prefix client i"
+  }
+}
+
+
+server/package.json’a:
+
+"dev": "nodemon src/index.ts"
+
+"start": "node dist/index.js" (ve TS kullanıyorsak build scriptlerini ekle)
+
+9) Test & Kabul
+
+Aşağıdakileri sırayla elle koştur ve README’nin “Test” bölümüne maddeler halinde yaz:
+
+npm --prefix server run prisma:generate && npm --prefix server run prisma:migrate && npm --prefix server run seed
+
+npm run dev → API /api/health 200 {ok:true}
+
+Register/Login → GET /api/auth/me token ile çalışıyor
+
+POST /api/ai/generate/ideas → 3+ fikir JSON dönüyor
+
+POST /api/ai/generate/caption → 3–5 varyant
+
+POST /api/ai/generate/image → imageUrl dönüyor, UI’de görünüyor
+
+Post create + schedule → Buffer’a taslak/schedule gidiyor, status=scheduled
+
+Cron → zamanı gelince status=posted
+
+Stripe Checkout (test) → webhook sonrası plan=pro
+
+10) Son
+
+Değiştirdiğin/eklediğin dosyaların listesini ve önemli kod parçalarını özetle.
+
+Hata varsa düzelt; her endpoint için örnek cURL komutlarını README’ye ekle.

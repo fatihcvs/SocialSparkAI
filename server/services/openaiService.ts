@@ -137,7 +137,11 @@ Platform limitleri:
         quality: "standard",
       });
 
-      return { url: response.data[0].url! };
+      const imageUrl = response.data?.[0]?.url;
+      if (!imageUrl) {
+        throw new Error("Görsel URL'si alınamadı");
+      }
+      return { url: imageUrl };
     } catch (error) {
       console.error("OpenAI image generation error:", error);
       throw new Error("Görsel oluşturulamadı");
