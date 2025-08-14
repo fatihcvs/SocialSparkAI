@@ -77,7 +77,7 @@ cp .env.example .env
 - `STRIPE_SECRET_KEY` - Stripe gizli anahtarınız
 - `STRIPE_WEBHOOK_SECRET` - Stripe webhook gizli anahtarınız
 - `STRIPE_PRICE_PRO_MONTH` - Stripe Pro plan fiyat ID'si
-  - `ZAPIER_HOOK_URL` - Zapier webhook URL'niz (Pro)
+- `ZAPIER_HOOK_URL` - Zapier webhook URL'niz (Pro)
 - `JWT_SECRET` - Güçlü bir JWT gizli anahtarı (tanımlanmazsa uygulama başlamaz)
 - `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe genel anahtarınız
 
