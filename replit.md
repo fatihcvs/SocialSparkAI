@@ -1,12 +1,31 @@
-# AI Sosyal Medya Planlayıcı
+# SocialSparkAI - AI Destekli Sosyal Medya İçerik Platformu
 
 ## Overview
 
-AI Sosyal Medya Planlayıcı is a comprehensive social media content management and planning platform built with AI capabilities. The system enables users to generate content ideas using AI, create custom visuals, schedule posts, and manage all their social media accounts from a single interface. The platform includes a freemium subscription model with Stripe integration and supports multiple social media platforms through Zapier webhook integration.
+SocialSparkAI, yapay zeka destekli sosyal medya içerik üretme ve yayınlama platformudur. Kullanıcılar tek bir arayüzden AI ile içerik üretebilir, düzenleyebilir ve Zapier webhook entegrasyonu ile otomatik olarak sosyal medya platformlarına gönderebilir.
+
+### Temel Özellikler:
+- **AI İçerik Üretimi**: OpenAI API ile otomatik metin ve görsel üretimi
+- **Tek Tık Paylaşım**: Zapier webhook ile Facebook, Instagram, Twitter, LinkedIn'e otomatik paylaşım
+- **Abonelik Sistemi**: İyzico ödeme entegrasyonu ile pro/abonelik modeli (aylık ücretli sınırsız gönderi hakkı)
+- **Çoklu Platform Desteği**: Tüm ana sosyal medya platformları için optimize edilmiş içerik
+- **Merkezi Yönetim**: Tek arayüzden tüm sosyal medya hesaplarını yönetme
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Project Vision (Updated)
+
+SocialSparkAI core mission: Enable users to generate AI-powered social media content and automatically publish it across multiple platforms through a single interface. Key workflow:
+
+1. User creates account with subscription model (İyzico payment)
+2. AI generates content ideas and captions using OpenAI API
+3. User can edit/customize the generated content
+4. One-click publishing to social media via Zapier webhook automation
+5. Supports all major platforms: Facebook, Instagram, Twitter, LinkedIn, TikTok
+
+Business model: Monthly subscription for unlimited AI content generation and publishing rights.
 
 ## System Architecture
 
@@ -26,10 +45,10 @@ Security is implemented through JWT-based authentication with bcrypt for passwor
 AI-powered content generation is handled through OpenAI's APIs, specifically using GPT-4o for text generation and DALL-E 3 for image creation. The system includes intelligent prompting strategies tailored for different social media platforms (Instagram, LinkedIn, Twitter/X, TikTok) with customizable tone and target audience parameters.
 
 ### Social Media Integration
-Primary integration through Zapier webhooks (Pro feature). When ZAPIER_HOOK_URL is configured, the system sends posts to Zapier webhook endpoints for flexible social media automation. Supports Instagram, LinkedIn, Twitter/X, and TikTok platforms.
+Primary integration through Zapier webhooks (Pro feature). Users configure Zapier automations to connect with Facebook, Instagram, Twitter, LinkedIn and other platforms. When ZAPIER_HOOK_URL is configured, the system sends posts to Zapier webhook endpoints for flexible social media automation. Buffer API integration was cancelled in favor of Zapier's more flexible approach.
 
 ### Payment Processing
-Subscription management is implemented using Stripe with support for both one-time payments and recurring subscriptions. The system handles webhook events for subscription status updates and includes proper plan-based feature gating.
+Subscription management planned for İyzico integration with support for recurring subscriptions (monthly unlimited post access). Currently using Stripe for development/testing. The system handles webhook events for subscription status updates and includes proper plan-based feature gating.
 
 ## External Dependencies
 
