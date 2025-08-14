@@ -88,7 +88,7 @@ export default function AutonomousMonitor() {
 
   // Start/Stop system mutations
   const startMutation = useMutation({
-    mutationFn: () => apiRequest("/api/autonomous/start", { method: "POST" }),
+    mutationFn: () => apiRequest("/api/autonomous/start", "POST"),
     onSuccess: () => {
       toast({ title: "Başarılı", description: "Autonomous sistem başlatıldı" });
       queryClient.invalidateQueries({ queryKey: ["/api/autonomous/status"] });
@@ -99,7 +99,7 @@ export default function AutonomousMonitor() {
   });
 
   const stopMutation = useMutation({
-    mutationFn: () => apiRequest("/api/autonomous/stop", { method: "POST" }),
+    mutationFn: () => apiRequest("/api/autonomous/stop", "POST"),
     onSuccess: () => {
       toast({ title: "Başarılı", description: "Autonomous sistem durduruldu" });
       queryClient.invalidateQueries({ queryKey: ["/api/autonomous/status"] });
@@ -111,7 +111,7 @@ export default function AutonomousMonitor() {
 
   // Manual health check
   const healthCheckMutation = useMutation({
-    mutationFn: () => apiRequest("/api/autonomous/health/check", { method: "POST" }),
+    mutationFn: () => apiRequest("/api/autonomous/health/check", "POST"),
     onSuccess: () => {
       toast({ title: "Başarılı", description: "Sistem kontrolü tamamlandı" });
       queryClient.invalidateQueries({ queryKey: ["/api/autonomous/health"] });
@@ -120,7 +120,7 @@ export default function AutonomousMonitor() {
 
   // Manual AI analysis
   const analysisMutation = useMutation({
-    mutationFn: () => apiRequest("/api/autonomous/analysis/run", { method: "POST" }),
+    mutationFn: () => apiRequest("/api/autonomous/analysis/run", "POST"),
     onSuccess: () => {
       toast({ title: "Başarılı", description: "AI analizi başlatıldı" });
       queryClient.invalidateQueries({ queryKey: ["/api/autonomous/analysis"] });
