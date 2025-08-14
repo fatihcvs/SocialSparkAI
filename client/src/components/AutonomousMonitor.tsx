@@ -127,6 +127,12 @@ export default function AutonomousMonitor() {
     }
   });
 
+  // Normalize possibly undefined query results
+  const issues = healthData?.issues ?? [];
+  const analysisRecent = analysisData?.recent ?? [];
+  const recentFixes = fixData?.recent ?? [];
+  const fixHistory = fixData?.history ?? [];
+
   if (statusLoading) {
     return (
       <div className="space-y-6">
@@ -349,24 +355,26 @@ export default function AutonomousMonitor() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {fixData?.recent?.slice(0, 5).map((fix: Fix, index: number) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      {fix.success ? (
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-red-600" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{fix.description}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(fix.timestamp).toLocaleString('tr-TR')}
-                        </p>
+                  {recentFixes.length > 0 ? (
+                    recentFixes.slice(0, 5).map((fix: Fix, index: number) => (
+                      <div key={index} className="flex items-center space-x-3">
+                        {fix.success ? (
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-red-600" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{fix.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(fix.timestamp).toLocaleString('tr-TR')}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {fix.action}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {fix.action}
-                      </Badge>
-                    </div>
-                  )) || (
+                    ))
+                  ) : (
                     <p className="text-sm text-muted-foreground">Henüz aktivite yok</p>
                   )}
                 </div>
@@ -382,9 +390,9 @@ export default function AutonomousMonitor() {
               <CardDescription>Detaylı sistem metrikleri ve sorunlar</CardDescription>
             </CardHeader>
             <CardContent>
-              {healthData?.issues?.length > 0 ? (
+              {issues.length > 0 ? (
                 <div className="space-y-4">
-                  {healthData.issues.map((issue: any, index: number) => (
+                  {issues.map((issue: any, index: number) => (
                     <Alert key={index}>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
@@ -421,9 +429,9 @@ export default function AutonomousMonitor() {
               <CardDescription>ChatGPT tarafından yapılan sistem analizleri</CardDescription>
             </CardHeader>
             <CardContent>
-              {analysisData?.recent?.length > 0 ? (
+              {analysisRecent.length > 0 ? (
                 <div className="space-y-4">
-                  {analysisData.recent.map((analysis: Analysis, index: number) => (
+                  {analysisRecent.map((analysis: Analysis, index: number) => (
                     <div key={index} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">{analysis.summary}</h4>
@@ -461,9 +469,9 @@ export default function AutonomousMonitor() {
               <CardDescription>Sistem tarafından yapılan otomatik düzeltmeler</CardDescription>
             </CardHeader>
             <CardContent>
-              {fixData?.history?.length > 0 ? (
+              {fixHistory.length > 0 ? (
                 <div className="space-y-4">
-                  {fixData.history.map((fix: Fix, index: number) => (
+                  {fixHistory.map((fix: Fix, index: number) => (
                     <div key={index} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
