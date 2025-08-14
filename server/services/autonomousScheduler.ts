@@ -1,4 +1,5 @@
 import cron from "node-cron";
+import { execSync } from "child_process";
 import { healthMonitor } from "./healthMonitor";
 import { aiAnalyzer } from "./aiAnalyzer";
 import { autoFixer } from "./autoFixer";
@@ -61,6 +62,7 @@ export class AutonomousScheduler {
     await this.scheduleAIAnalysis();
     await this.scheduleMaintenance();
     await this.scheduleEmergencyResponse();
+    await this.scheduleAutoPull();
     
     this.isActive = true;
     console.log("[AutonomousScheduler] ✅ Autonomous system is now ACTIVE");
@@ -154,6 +156,22 @@ export class AutonomousScheduler {
     job.start();
     
     console.log(`[AutonomousScheduler] Scheduled emergency response: ${schedule}`);
+  }
+
+  private async scheduleAutoPull(): Promise<void> {
+    const taskName = "auto_pull";
+    const schedule = "*/5 * * * *"; // Every 5 minutes
+    
+    const job = cron.schedule(schedule, async () => {
+      await this.executeAutoPull();
+    }, {
+      timezone: "Europe/Istanbul"
+    });
+
+    this.registerTask(taskName, schedule, job);
+    job.start();
+    
+    console.log(`[AutonomousScheduler] 🔄 Scheduled auto-pull from GitHub: ${schedule}`);
   }
 
   private async executeHealthCheck(): Promise<void> {
@@ -412,6 +430,32 @@ export class AutonomousScheduler {
     
     const successful = recentFixes.filter(fix => fix.success).length;
     return successful / recentFixes.length;
+  }
+
+  private async executeAutoPull(): Promise<void> {
+    const taskName = "auto_pull";
+    
+    try {
+      this.updateTaskStatus(taskName, true);
+      
+      console.log("[AutonomousScheduler] 🔄 Checking for GitHub updates...");
+      
+      // Run auto-pull script
+      execSync('tsx scripts/auto-pull.ts', { 
+        stdio: 'inherit',
+        cwd: process.cwd()
+      });
+      
+      console.log("[AutonomousScheduler] ✅ Auto-pull completed successfully");
+      this.updateTaskStatus(taskName, false, false);
+      
+    } catch (error: any) {
+      console.error(`[AutonomousScheduler] ❌ Auto-pull failed:`, error.message);
+      this.updateTaskStatus(taskName, false, true);
+      
+      // Log the error but don't crash the system
+      this.logSystemEvent("AUTO_PULL_FAILED", `GitHub pull failed: ${error.message}`);
+    }
   }
 
   // Public methods for monitoring and control
