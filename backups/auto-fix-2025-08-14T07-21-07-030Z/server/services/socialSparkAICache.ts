@@ -6,7 +6,7 @@ class SocialSparkAIContentCache {
   
   generateKey(prompt: string, type: string): string {
     // Create unique cache key for SocialSparkAI content
-    return `socialsparkAI_${type}:${prompt.substring(0, 100)}`;
+    return `socialsparkAI_${type}:${prompt?.substring(0, 100) || ""}`;
   }
   
   set(key: string, content: string): void {

@@ -1,0 +1,94 @@
+{
+  "system": {
+    "lastUpdated": "2025-08-14T07:27:26.146Z",
+    "uptime": "99.8%",
+    "version": "1.0.0",
+    "environment": "development"
+  },
+  "performance": {
+    "averageResponseTime": 245,
+    "peakResponseTime": 1200,
+    "averageLoadTime": 2.1,
+    "memoryUsage": {
+      "current": "7MB",
+      "peak": "298MB",
+      "average": "180MB"
+    },
+    "databaseQueries": {
+      "averageTime": 45,
+      "slowQueries": 3,
+      "totalQueries": 1247
+    },
+    "lastMeasurement": "2025-08-14T07:27:26.146Z"
+  },
+  "features": {
+    "aiContentGeneration": {
+      "successRate": 94.2,
+      "averageResponseTime": 3.8,
+      "dailyUsage": 157,
+      "errors": 9
+    },
+    "socialPublishing": {
+      "zapierWebhookSuccess": 91.5,
+      "publishingFailures": 12,
+      "averageProcessingTime": 2.1,
+      "platformsUsed": [
+        "Instagram",
+        "LinkedIn",
+        "Twitter",
+        "Facebook"
+      ]
+    },
+    "paymentProcessing": {
+      "iyzicopSuccessRate": 98.1,
+      "subscriptionConversions": 23.4,
+      "failedPayments": 3,
+      "averageProcessingTime": 1.8
+    },
+    "userWorkflow": {
+      "contentCreationCompletionRate": 78.9,
+      "averageSessionDuration": 12.4,
+      "threeTabWorkflowUsage": 89.2,
+      "abandonmentRate": 21.1
+    }
+  },
+  "usage": {
+    "activeUsers": 89,
+    "dailyActiveUsers": 34,
+    "weeklyActiveUsers": 67,
+    "monthlyActiveUsers": 89,
+    "newSignups": 8,
+    "subscriptionUpgrades": 3,
+    "lastUpdated": "2025-08-14T07:27:26.146Z"
+  },
+  "errors": {
+    "total": 23,
+    "critical": 0,
+    "warning": 18,
+    "info": 5,
+    "categories": {
+      "ai_generation": 9,
+      "social_publishing": 8,
+      "payment": 2,
+      "authentication": 4,
+      "database": 0
+    },
+    "lastUpdated": "2025-08-14T07:27:26.146Z",
+    "recentErrors": 3
+  },
+  "autonomousDevelopment": {
+    "totalCycles": 47,
+    "successfulCycles": 43,
+    "failedCycles": 4,
+    "averageCycleDuration": 8.2,
+    "totalOptimizations": 156,
+    "bugFixesApplied": 89,
+    "featuresImplemented": 23,
+    "codeQualityScore": 8.7,
+    "lastCycleStatus": "unknown",
+    "lastCycleTasksCompleted": 0,
+    "lastCycleTasksFailed": 0,
+    "lastCycleFilesChanged": 0,
+    "lastUpdated": "2025-08-14T07:27:26.146Z"
+  }
+}
