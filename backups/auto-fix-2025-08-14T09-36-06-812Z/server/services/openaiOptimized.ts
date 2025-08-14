@@ -15,8 +15,7 @@ export const generateContentWithRetry = async (prompt: string, maxRetries = 3) =
     try {
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [{ role: "user", content: prompt }],
-        timeout: 30000
+        messages: [{ role: "user", content: prompt }]
       });
       
       console.log("[OpenAI] ✅ SocialSparkAI content generated successfully on attempt", attempt);
@@ -50,7 +49,7 @@ export const generateImageWithFallback = async (prompt: string) => {
     });
     
     console.log("[DALL-E 3] ✅ SocialSparkAI image generated successfully");
-    return response.data[0].url;
+    return response.data?.[0]?.url || "";
     
   } catch (error: any) {
     console.error("[DALL-E 3] ❌ SocialSparkAI image generation failed:", error.message);
