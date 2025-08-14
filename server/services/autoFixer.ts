@@ -29,12 +29,12 @@ export class AutoFixer {
   private static instance: AutoFixer;
   private fixHistory: FixResult[] = [];
   private config: AutoFixConfig = {
-    enableCodeChanges: true,
-    enableDatabaseFixes: true,
-    enableConfigUpdates: true,
-    maxFilesPerFix: 5,
-    backupBeforeFix: true,
-    testAfterFix: true
+    enableCodeChanges: true,        // FULL AUTHORITY: Can modify any code file
+    enableDatabaseFixes: true,      // FULL AUTHORITY: Can optimize database queries  
+    enableConfigUpdates: true,      // FULL AUTHORITY: Can update configurations
+    maxFilesPerFix: 20,            // EXPANDED: Can modify up to 20 files per fix
+    backupBeforeFix: true,         // Safety: Always backup before changes
+    testAfterFix: true             // Safety: Test changes after implementation
   };
 
   static getInstance(): AutoFixer {

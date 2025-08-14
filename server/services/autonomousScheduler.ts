@@ -192,13 +192,13 @@ export class AutonomousScheduler {
       
       console.log(`[AutonomousScheduler] 🎯 SocialSparkAI Analysis: ${analysis.summary} (Urgency: ${analysis.urgency}/10)`);
       
-      // In intensive mode, auto-fix medium to high urgency issues (lowered threshold from 7 to 5)
-      if (analysis.urgency >= 5 && analysis.autoFixable) {
-        console.log("[AutonomousScheduler] 🔧 INTENSIVE MODE: Auto-fixing detected issue...");
+      // FULL AUTHORITY MODE: Auto-fix ALL issues with urgency ≥3 (maximum aggressive mode)
+      if (analysis.urgency >= 3 && analysis.autoFixable) {
+        console.log("[AutonomousScheduler] 🔧 FULL AUTHORITY: Auto-fixing detected issue...");
         await this.executeAutoFix(analysis);
-      } else if (analysis.urgency >= 3) {
-        console.log("[AutonomousScheduler] 📋 INTENSIVE MODE: Logging improvement opportunity...");
-        // Log for potential future fixes
+      } else if (analysis.urgency >= 1) {
+        console.log("[AutonomousScheduler] 📋 FULL AUTHORITY: Analyzing minor optimization opportunity...");
+        // Even minor issues get attention in full authority mode
       }
       
       this.updateTaskStatus(taskName, false, false);
