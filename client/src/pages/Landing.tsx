@@ -69,9 +69,9 @@ export default function Landing() {
           <Card className="text-center">
             <CardContent className="pt-6">
               <Share2 className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Buffer Entegrasyonu</h3>
+              <h3 className="text-xl font-semibold mb-2">Zapier Entegrasyonu</h3>
               <p className="text-slate-600">
-                Instagram, LinkedIn, Twitter/X'e otomatik paylaşım
+                Instagram, LinkedIn, Twitter/X'e Zapier ile otomatik paylaşım
               </p>
             </CardContent>
           </Card>
@@ -163,7 +163,7 @@ export default function Landing() {
                   </li>
                   <li className="flex items-center">
                     <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                    Buffer otomatik paylaşım
+                    Zapier otomatik paylaşım
                   </li>
                   <li className="flex items-center">
                     <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>

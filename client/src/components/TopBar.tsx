@@ -10,7 +10,7 @@ const pageTitle: Record<string, string> = {
   "/posts": "Gönderiler",
   "/ai-content": "AI İçerik Üret",
   "/image-generation": "Görsel Oluştur",
-  "/buffer-integration": "Buffer Entegrasyonu",
+  "/zapier-integration": "Zapier Entegrasyonu",
   "/billing": "Faturalandırma",
   "/settings": "Ayarlar",
 };
@@ -21,7 +21,7 @@ const pageDescription: Record<string, string> = {
   "/posts": "Gönderi yönetimi ve düzenleme",
   "/ai-content": "AI ile içerik fikirleri üretin",
   "/image-generation": "AI ile görsel oluşturun",
-  "/buffer-integration": "Sosyal medya hesaplarınızı bağlayın",
+  "/zapier-integration": "Zapier webhook bağlantısı",
   "/billing": "Plan ve fatura yönetimi",
   "/settings": "Hesap ve uygulama ayarları",
 };

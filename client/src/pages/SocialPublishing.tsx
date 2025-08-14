@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import type { User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Crown, 
@@ -33,7 +32,7 @@ interface ZapierTestResponse {
 
 export default function SocialPublishing() {
   const { toast } = useToast();
-  const { user } = useAuth() as { user: User | null };
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
   const [isSendingPost, setIsSendingPost] = useState(false);

@@ -12,10 +12,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { removeAuthToken } from "@/lib/authUtils";
 import { useLocation } from "wouter";
-import { 
-  User, 
-  Mail, 
-  Shield, 
+import {
+  User,
+  Mail,
+  Shield,
   Settings as SettingsIcon,
   AlertTriangle,
   Crown,
@@ -23,6 +23,12 @@ import {
   Database,
   LogOut
 } from "lucide-react";
+
+interface ApiUsageStats {
+  ideas: number;
+  captions: number;
+  images: number;
+}
 
 export default function Settings() {
   const { toast } = useToast();
@@ -87,7 +93,7 @@ export default function Settings() {
     },
   });
 
-  const { data: apiUsage } = useQuery({
+  const { data: apiUsage } = useQuery<ApiUsageStats>({
     queryKey: ["/api/usage/stats"],
     retry: false,
   });

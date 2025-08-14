@@ -3,12 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import type { User } from "@shared/schema";
 import { useLocation } from "wouter";
 import { MessageCircle, Image, Calendar, Crown } from "lucide-react";
 
 export default function AITools() {
-  const { user } = useAuth() as { user: User | null };
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
 
   const tools = [
@@ -100,7 +99,7 @@ export default function AITools() {
               <div>
                 <p className="text-sm font-medium text-blue-900">Pro Özellikler</p>
                 <p className="text-xs text-blue-700">
-                  Buffer entegrasyonu için Pro plana yükseltin
+                  Zapier entegrasyonu için Pro plana yükseltin
                 </p>
               </div>
             </div>

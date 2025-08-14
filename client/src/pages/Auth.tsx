@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { Zap } from "lucide-react";
 export default function Auth() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({ 
@@ -29,6 +30,7 @@ export default function Auth() {
     },
     onSuccess: (data) => {
       setAuthToken(data.token);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
         title: "Başarılı",
         description: "Giriş yapıldı!",
@@ -51,8 +53,9 @@ export default function Auth() {
     },
     onSuccess: (data) => {
       setAuthToken(data.token);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
-        title: "Başarılı", 
+        title: "Başarılı",
         description: "Hesap oluşturuldu!",
       });
       setLocation("/");

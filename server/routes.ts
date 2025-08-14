@@ -12,8 +12,6 @@ import { rateLimit as apiRateLimit, ipRateLimit } from "./middlewares/rateLimite
 import { openaiService } from "./services/openaiService";
 import { contentService } from "./services/contentService";
 import { stripeService } from "./services/stripeService";
-import { bufferService } from "./services/bufferService";
-import { schedulerService } from "./jobs/scheduler";
 import type { AuthRequest } from "./middlewares/auth";
 import integrationRoutes from "./routes/integrations";
 
@@ -382,73 +380,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Integration routes (Zapier/Make webhook)
   app.use("/api/integrations", integrationRoutes);
 
-  // Buffer routes (Pro only) - Disabled when Zapier webhook is configured
-  if (!process.env.ZAPIER_HOOK_URL) {
-    app.post("/api/buffer/connect", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
-      try {
-        res.json({ 
-          message: "Buffer entegrasyonu aktif",
-          profiles: await bufferService.getProfiles()
-        });
-      } catch (error) {
-        console.error("Buffer connect error:", error);
-        res.status(500).json({
-          error: { code: "INTERNAL_ERROR", message: "Buffer'a bağlanılamadı" }
-        });
-      }
-    });
-
-    app.post("/api/buffer/schedule/:postId", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
-      try {
-        const schema = z.object({
-          scheduledAt: z.string().datetime(),
-        });
-
-        const { scheduledAt } = schema.parse(req.body);
-        
-        const post = await contentService.schedulePost(
-          req.params.postId,
-          new Date(scheduledAt)
-        );
-
-        res.json(post);
-      } catch (error) {
-        console.error("Schedule post error:", error);
-        if (error instanceof z.ZodError) {
-          return res.status(400).json({
-            error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
-          });
-        }
-        res.status(500).json({
-          error: { code: "INTERNAL_ERROR", message: "Gönderi planlanamadı" }
-        });
-      }
-    });
-
-    app.post("/api/buffer/publish/:postId", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
-      try {
-        const post = await contentService.publishPostNow(req.params.postId);
-        res.json(post);
-      } catch (error) {
-        console.error("Publish post error:", error);
-        res.status(500).json({
-          error: { code: "INTERNAL_ERROR", message: "Gönderi yayınlanamadı" }
-        });
-      }
-    });
-
-    app.get("/api/buffer/status/:postId", authenticateToken, async (req: AuthRequest, res) => {
-      try {
-        const status = await contentService.checkPostStatus(req.params.postId);
-        res.json({ status });
-      } catch (error) {
-        console.error("Get post status error:", error);
-        res.status(500).json({
-          error: { code: "INTERNAL_ERROR", message: "Gönderi durumu alınamadı" }
-        });
-      }
-    });
-  }
+  app.post("/api/posts/:postId/publish", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
+    try {
+      const post = await contentService.publishPostNow(req.params.postId);
+      res.json(post);
+    } catch (error) {
+      console.error("Publish post error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Gönderi Zapier'e gönderilemedi" }
+      });
+    }
+  });
 
   // Export routes
   app.get("/api/export/csv", authenticateToken, async (req: AuthRequest, res) => {
@@ -605,30 +547,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-
-  // Manual scheduler trigger (for testing)
-  app.post("/api/admin/trigger-scheduler", authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      // Only allow admins
-      const user = await storage.getUser(req.user!.id);
-      if (user?.role !== "admin") {
-        return res.status(403).json({
-          error: { code: "FORBIDDEN", message: "Yetki yok" }
-        });
-      }
-
-      await schedulerService.triggerScheduledPosts();
-      res.json({ message: "Scheduler tetiklendi" });
-    } catch (error) {
-      console.error("Trigger scheduler error:", error);
-      res.status(500).json({
-        error: { code: "INTERNAL_ERROR", message: "Scheduler tetiklenemedi" }
-      });
-    }
-  });
-
-  // Start the scheduler
-  schedulerService.start();
 
   const httpServer = createServer(app);
   return httpServer;

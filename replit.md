@@ -2,7 +2,7 @@
 
 ## Overview
 
-AI Sosyal Medya Planlayıcı is a comprehensive social media content management and planning platform built with AI capabilities. The system enables users to generate content ideas using AI, create custom visuals, schedule posts, and manage all their social media accounts from a single interface. The platform includes a freemium subscription model with Stripe integration and supports multiple social media platforms through Buffer API integration.
+AI Sosyal Medya Planlayıcı is a comprehensive social media content management and planning platform built with AI capabilities. The system enables users to generate content ideas using AI, create custom visuals, schedule posts, and manage all their social media accounts from a single interface. The platform includes a freemium subscription model with Stripe integration and supports multiple social media platforms through Zapier webhook integration.
 
 ## User Preferences
 
@@ -26,19 +26,16 @@ Security is implemented through JWT-based authentication with bcrypt for passwor
 AI-powered content generation is handled through OpenAI's APIs, specifically using GPT-4o for text generation and DALL-E 3 for image creation. The system includes intelligent prompting strategies tailored for different social media platforms (Instagram, LinkedIn, Twitter/X, TikTok) with customizable tone and target audience parameters.
 
 ### Social Media Integration
-Primary integration through Zapier/Make webhooks (Pro feature) with Buffer API as fallback. When ZAPIER_HOOK_URL is configured, the system sends posts to Zapier webhook endpoints for flexible social media automation. Buffer integration disabled when Zapier is active. Supports Instagram, LinkedIn, Twitter/X, and TikTok platforms with scheduling via node-cron.
+Primary integration through Zapier webhooks (Pro feature). When ZAPIER_HOOK_URL is configured, the system sends posts to Zapier webhook endpoints for flexible social media automation. Supports Instagram, LinkedIn, Twitter/X, and TikTok platforms.
 
 ### Payment Processing
 Subscription management is implemented using Stripe with support for both one-time payments and recurring subscriptions. The system handles webhook events for subscription status updates and includes proper plan-based feature gating.
-
-### Job Scheduling
-The application includes a background job scheduler using node-cron for processing scheduled posts, updating social media statuses, and handling recurring tasks. The scheduler is designed to be resilient with proper error handling and logging.
 
 ## External Dependencies
 
 ### Third-Party Services
 - **OpenAI API**: Powers content generation through GPT-4o for text and DALL-E 3 for images
-- **Buffer API**: Handles social media post scheduling and publishing across multiple platforms
+  - **Zapier Webhook**: Handles social media post forwarding across multiple platforms
 - **Stripe**: Manages subscription billing, payment processing, and customer management
 - **Replit PostgreSQL**: Native Replit database with automatic provisioning and environment variables
 

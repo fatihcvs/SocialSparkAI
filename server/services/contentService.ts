@@ -1,5 +1,5 @@
 import { openaiService } from "./openaiService";
-import { bufferService } from "./bufferService";
+import { sendToZapier } from "./zapierService";
 import { storage } from "../storage";
 import type { ContentIdea, PostAsset } from "@shared/schema";
 
@@ -61,103 +61,46 @@ export class ContentService {
     postId: string,
     scheduledAt: Date
   ): Promise<PostAsset> {
-    const post = await storage.getPostAssets(postId);
-    if (!post || post.length === 0) {
+    const postAsset = await storage.getPostAsset(postId);
+    if (!postAsset) {
       throw new Error("Gönderi bulunamadı");
     }
 
-    const postAsset = post[0];
-    
-    try {
-      const bufferUpdate = await bufferService.createUpdate(
-        `${postAsset.caption}\n\n${postAsset.hashtags || ""}`,
-        [], // Use default profile
-        scheduledAt,
-        postAsset.imageUrl || undefined
-      );
-
-      const updatedPost = await storage.updatePostAsset(postAsset.id, {
-        status: "scheduled",
-        scheduledAt,
-        externalId: bufferUpdate.id,
-      });
-
-      return updatedPost;
-    } catch (error) {
-      console.error("Schedule post error:", error);
-      
-      // Update status to failed if Buffer scheduling fails
-      await storage.updatePostAsset(postAsset.id, {
-        status: "failed",
-      });
-      
-      throw new Error("Gönderi planlanamadı");
-    }
+    // Just update scheduled date; actual sending handled via publishPostNow
+    return storage.updatePostAsset(postAsset.id, {
+      status: "scheduled",
+      scheduledAt,
+    });
   }
 
   async publishPostNow(postId: string): Promise<PostAsset> {
-    const post = await storage.getPostAssets(postId);
-    if (!post || post.length === 0) {
+    const postAsset = await storage.getPostAsset(postId);
+    if (!postAsset) {
       throw new Error("Gönderi bulunamadı");
     }
-
-    const postAsset = post[0];
     
     try {
-      const bufferUpdate = await bufferService.createUpdate(
-        `${postAsset.caption}\n\n${postAsset.hashtags || ""}`,
-        [], // Use default profile
-        undefined, // Immediate posting
-        postAsset.imageUrl || undefined
-      );
+      await sendToZapier({
+        text: `${postAsset.caption}\n\n${postAsset.hashtags || ""}`,
+        mediaUrl: postAsset.imageUrl || undefined,
+        postId: postAsset.id,
+        userId: postAsset.userId,
+        platform: postAsset.platform,
+      });
 
       const updatedPost = await storage.updatePostAsset(postAsset.id, {
         status: "posted",
-        externalId: bufferUpdate.id,
       });
 
       return updatedPost;
     } catch (error) {
       console.error("Publish post error:", error);
-      
+
       await storage.updatePostAsset(postAsset.id, {
         status: "failed",
       });
-      
-      throw new Error("Gönderi yayınlanamadı");
-    }
-  }
 
-  async checkPostStatus(postId: string): Promise<string> {
-    const post = await storage.getPostAssets(postId);
-    if (!post || post.length === 0) {
-      throw new Error("Gönderi bulunamadı");
-    }
-
-    const postAsset = post[0];
-    
-    if (!postAsset.externalId) {
-      return postAsset.status;
-    }
-
-    try {
-      const bufferUpdate = await bufferService.getUpdate(postAsset.externalId);
-      
-      let status = postAsset.status;
-      if (bufferUpdate.status === "sent") {
-        status = "posted";
-      } else if (bufferUpdate.status === "failed") {
-        status = "failed";
-      }
-
-      if (status !== postAsset.status) {
-        await storage.updatePostAsset(postAsset.id, { status });
-      }
-
-      return status;
-    } catch (error) {
-      console.error("Check post status error:", error);
-      return postAsset.status;
+      throw new Error("Gönderi Zapier'e gönderilemedi");
     }
   }
 
