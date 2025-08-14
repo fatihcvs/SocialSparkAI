@@ -43,7 +43,7 @@ export default function LiveMonitoring() {
   const sessionEnd = sessionStart + (60 * 60 * 1000); // 1 hour
 
   // Live data fetching every 5 seconds
-  const { data: autonomousStatus } = useQuery({
+  const { data: autonomousStatus } = useQuery<{ isActive?: boolean; tasksCount?: number }>({
     queryKey: ["/api/autonomous/status"],
     refetchInterval: 5000,
   });

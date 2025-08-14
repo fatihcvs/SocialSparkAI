@@ -765,10 +765,11 @@ export const socialSparkAICache = new SocialSparkAIContentCache();
         success: status.uptime && status.status !== 'critical',
         details: `System status: ${status.status}, Uptime: ${status.uptime}`
       };
-    } catch (error) {
+    } catch (error: unknown) {
+      const err = error as Error;
       return {
         success: false,
-        details: `Health check failed: ${error.message}`
+        details: `Health check failed: ${err.message}`
       };
     }
   }

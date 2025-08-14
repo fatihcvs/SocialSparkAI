@@ -382,9 +382,9 @@ export default function AutonomousMonitor() {
               <CardDescription>Detaylı sistem metrikleri ve sorunlar</CardDescription>
             </CardHeader>
             <CardContent>
-              {healthData?.issues?.length > 0 ? (
+              {(healthData?.issues?.length ?? 0) > 0 ? (
                 <div className="space-y-4">
-                  {healthData.issues.map((issue: any, index: number) => (
+                  {healthData?.issues?.map((issue: any, index: number) => (
                     <Alert key={index}>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
@@ -421,9 +421,9 @@ export default function AutonomousMonitor() {
               <CardDescription>ChatGPT tarafından yapılan sistem analizleri</CardDescription>
             </CardHeader>
             <CardContent>
-              {analysisData?.recent?.length > 0 ? (
+              {(analysisData?.recent?.length ?? 0) > 0 ? (
                 <div className="space-y-4">
-                  {analysisData.recent.map((analysis: Analysis, index: number) => (
+                  {analysisData?.recent?.map((analysis: Analysis, index: number) => (
                     <div key={index} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">{analysis.summary}</h4>
@@ -461,9 +461,9 @@ export default function AutonomousMonitor() {
               <CardDescription>Sistem tarafından yapılan otomatik düzeltmeler</CardDescription>
             </CardHeader>
             <CardContent>
-              {fixData?.history?.length > 0 ? (
+              {(fixData?.history?.length ?? 0) > 0 ? (
                 <div className="space-y-4">
-                  {fixData.history.map((fix: Fix, index: number) => (
+                  {fixData?.history?.map((fix: Fix, index: number) => (
                     <div key={index} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">

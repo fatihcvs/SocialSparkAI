@@ -49,7 +49,7 @@ export const generateImageWithFallback = async (prompt: string) => {
     });
     
     console.log("[DALL-E 3] ✅ SocialSparkAI image generated successfully");
-    return response.data[0]?.url || "";
+    return response.data?.[0]?.url || "";
     
   } catch (error: any) {
     console.error("[DALL-E 3] ❌ SocialSparkAI image generation failed:", error.message);
