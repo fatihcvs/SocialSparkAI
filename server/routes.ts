@@ -22,9 +22,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
   
   app.use(cors({
-    origin: process.env.NODE_ENV === "production" 
-      ? ["https://your-domain.com"] // Replace with actual domain
-      : ["http://localhost:5000", "http://127.0.0.1:5000"],
+    origin:
+      process.env.NODE_ENV === "production"
+        ? ["https://your-domain.com"] // Replace with actual domain
+        : true,
     credentials: true,
   }));
 
