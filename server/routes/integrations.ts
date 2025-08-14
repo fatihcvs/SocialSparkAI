@@ -36,13 +36,18 @@ router.post("/zapier/publish", authenticateToken, async (req: AuthRequest, res) 
       timestamp: new Date().toISOString(),
     };
 
-    // Forward to Zapier webhook using axios
-    const axios = (await import('axios')).default;
-    const response = await axios.post(zapierHookUrl, payload, {
+    // Forward to Zapier webhook
+    const response = await fetch(zapierHookUrl, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify(payload),
     });
+
+    if (!response.ok) {
+      throw new Error(`Zapier webhook error: ${response.status} ${response.statusText}`);
+    }
 
     res.status(202).json({ 
       ok: true, 

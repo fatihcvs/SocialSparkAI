@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import type { User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Share2, 
@@ -26,17 +25,12 @@ interface BufferProfile {
   service_username: string;
 }
 
-interface ConnectionStatus {
-  profiles?: BufferProfile[];
-  [key: string]: any;
-}
-
 export default function BufferIntegration() {
   const { toast } = useToast();
-  const { user } = useAuth() as { user: User | null };
+  const { user } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const { data: connectionStatus } = useQuery<ConnectionStatus>({
+  const { data: connectionStatus } = useQuery({
     queryKey: ["/api/buffer/connect"],
     enabled: user?.plan === "pro",
     retry: false,
@@ -150,7 +144,7 @@ export default function BufferIntegration() {
                 Buffer Hesabınızı Bağlayın
               </h3>
               <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                Zapier/Make hesabınızı bağlayarak gönderilerinizi Instagram, LinkedIn ve Twitter/X'te 
+                Buffer hesabınızı bağlayarak gönderilerinizi Instagram, LinkedIn ve Twitter/X'te 
                 otomatik olarak zamanlayabilir ve paylaşabilirsiniz.
               </p>
               <Button 
@@ -159,7 +153,7 @@ export default function BufferIntegration() {
                 data-testid="button-connect-buffer"
               >
                 <Share2 className="w-4 h-4 mr-2" />
-                {isConnecting ? "Bağlanıyor..." : "Zapier/Make'i Bağla"}
+                {isConnecting ? "Bağlanıyor..." : "Buffer'ı Bağla"}
               </Button>
             </div>
           ) : (
