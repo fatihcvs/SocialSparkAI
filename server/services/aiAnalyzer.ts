@@ -42,6 +42,10 @@ export class AIAnalyzer {
   private static instance: AIAnalyzer;
   private analysisHistory: AnalysisResult[] = [];
 
+  getAnalysisHistory(): AnalysisResult[] {
+    return this.analysisHistory;
+  }
+
   static getInstance(): AIAnalyzer {
     if (!AIAnalyzer.instance) {
       AIAnalyzer.instance = new AIAnalyzer();
@@ -357,9 +361,7 @@ Maintain existing code style and structure. Only make the minimal necessary chan
     }
   }
 
-  getAnalysisHistory(): AnalysisResult[] {
-    return [...this.analysisHistory];
-  }
+
 
   getCriticalAnalyses(): AnalysisResult[] {
     return this.analysisHistory.filter(a => 

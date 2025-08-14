@@ -29,6 +29,11 @@ interface AutoFixConfig {
 export class AutoFixer {
   private static instance: AutoFixer;
   private fixHistory: FixResult[] = [];
+
+  getFixHistory(): FixResult[] {
+    return this.fixHistory;
+  }
+
   private config: AutoFixConfig = {
     enableCodeChanges: true,        // FULL AUTHORITY: Can modify any code file
     enableDatabaseFixes: true,      // FULL AUTHORITY: Can optimize database queries  
@@ -785,9 +790,7 @@ export const socialSparkAICache = new SocialSparkAIContentCache();
     }
   }
 
-  getFixHistory(): FixResult[] {
-    return [...this.fixHistory];
-  }
+
 
   getSuccessfulFixes(): FixResult[] {
     return this.fixHistory.filter(fix => fix.success);
