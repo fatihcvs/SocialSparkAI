@@ -39,6 +39,7 @@ export interface IStorage {
   getContentIdea(id: string): Promise<ContentIdea | undefined>;
 
   // Post asset operations
+  getPostAsset(id: string): Promise<PostAsset | undefined>;
   getPostAssets(userId: string, status?: string): Promise<PostAsset[]>;
   createPostAsset(asset: InsertPostAsset): Promise<PostAsset>;
   updatePostAsset(id: string, updates: Partial<PostAsset>): Promise<PostAsset>;
@@ -56,7 +57,7 @@ export interface IStorage {
   updateSubscription(id: string, updates: Partial<Subscription>): Promise<Subscription>;
 
   // API usage tracking
-  getApiUsage(userId: string, endpoint: string, date: Date): Promise<number>;
+  getApiUsage(userId: string, endpoint: string, since: Date): Promise<number>;
   incrementApiUsage(userId: string, endpoint: string): Promise<void>;
 }
 
@@ -154,6 +155,14 @@ export class DatabaseStorage implements IStorage {
       .from(contentIdeas)
       .where(eq(contentIdeas.id, id));
     return idea;
+  }
+
+  async getPostAsset(id: string): Promise<PostAsset | undefined> {
+    const [asset] = await db
+      .select()
+      .from(postAssets)
+      .where(eq(postAssets.id, id));
+    return asset;
   }
 
   async getPostAssets(userId: string, status?: string): Promise<PostAsset[]> {
@@ -267,12 +276,7 @@ export class DatabaseStorage implements IStorage {
     return subscription;
   }
 
-  async getApiUsage(userId: string, endpoint: string, date: Date): Promise<number> {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-
+  async getApiUsage(userId: string, endpoint: string, since: Date): Promise<number> {
     const [result] = await db
       .select({ total: sql<number>`sum(${apiUsage.count})` })
       .from(apiUsage)
@@ -280,8 +284,7 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(apiUsage.userId, userId),
           eq(apiUsage.endpoint, endpoint),
-          gte(apiUsage.date, startOfDay),
-          lte(apiUsage.date, endOfDay)
+          gte(apiUsage.date, since)
         )
       );
 
@@ -289,35 +292,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async incrementApiUsage(userId: string, endpoint: string): Promise<void> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const [existing] = await db
-      .select()
-      .from(apiUsage)
-      .where(
-        and(
-          eq(apiUsage.userId, userId),
-          eq(apiUsage.endpoint, endpoint),
-          eq(apiUsage.date, today)
-        )
-      );
-
-    if (existing) {
-      await db
-        .update(apiUsage)
-        .set({ count: existing.count + 1 })
-        .where(eq(apiUsage.id, existing.id));
-    } else {
-      await db
-        .insert(apiUsage)
-        .values({
-          userId,
-          endpoint,
-          date: today,
-          count: 1,
-        });
-    }
+    await db.insert(apiUsage).values({
+      userId,
+      endpoint,
+      date: new Date(),
+      count: 1,
+    });
   }
 }
 

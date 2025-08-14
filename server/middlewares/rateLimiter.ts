@@ -45,7 +45,14 @@ export const rateLimit = (configKey: keyof typeof rateLimitConfigs) => {
 
     try {
       const now = new Date();
-      const usage = await storage.getApiUsage(req.user.id, config.endpoint, now);
+      const windowStart = new Date(
+        now.getTime() - config.windowHours * 60 * 60 * 1000
+      );
+      const usage = await storage.getApiUsage(
+        req.user.id,
+        config.endpoint,
+        windowStart
+      );
 
       const limit = req.user.plan === "pro" ? config.proLimit : config.freeLimit;
 
@@ -53,7 +60,7 @@ export const rateLimit = (configKey: keyof typeof rateLimitConfigs) => {
         res.status(429).json({
           error: {
             code: "RATE_LIMIT_EXCEEDED",
-            message: `Günlük ${config.endpoint} limiti aşıldı (${usage}/${limit})`,
+            message: `${config.endpoint} limiti aşıldı (${usage}/${limit})`,
           },
         });
         return;
@@ -65,12 +72,17 @@ export const rateLimit = (configKey: keyof typeof rateLimitConfigs) => {
       // Add usage info to response headers
       res.setHeader("X-RateLimit-Limit", limit);
       res.setHeader("X-RateLimit-Remaining", Math.max(0, limit - usage - 1));
-      res.setHeader("X-RateLimit-Reset", new Date(now.getTime() + config.windowHours * 60 * 60 * 1000).toISOString());
+      res.setHeader(
+        "X-RateLimit-Reset",
+        new Date(now.getTime() + config.windowHours * 60 * 60 * 1000).toISOString()
+      );
 
       next();
     } catch (error) {
       console.error("Rate limit error:", error);
-      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Rate limit kontrolü başarısız" } });
+      res
+        .status(500)
+        .json({ error: { code: "INTERNAL_ERROR", message: "Rate limit kontrolü başarısız" } });
     }
   };
 };
@@ -83,6 +95,13 @@ export const ipRateLimit = (maxRequests: number, windowMinutes: number) => {
     const ip = req.ip || req.connection.remoteAddress || "unknown";
     const now = Date.now();
     const windowMs = windowMinutes * 60 * 1000;
+
+    // Cleanup expired entries
+    ipRequestCounts.forEach((data, key) => {
+      if (now > data.resetTime) {
+        ipRequestCounts.delete(key);
+      }
+    });
 
     const ipData = ipRequestCounts.get(ip);
 

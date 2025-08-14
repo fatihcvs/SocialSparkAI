@@ -71,7 +71,7 @@ export default function Billing() {
 
   const proPlanFeatures = [
     "Günlük 50 AI çağrısı",
-    "Buffer otomatik paylaşım",
+    "Zapier ile otomatik paylaşım",
     "Gelişmiş AI özellikler",
     "Detaylı analitik ve raporlar",
     "Öncelikli destek",
@@ -284,7 +284,7 @@ export default function Billing() {
                 <tr>
                   <td className="py-3 px-4 flex items-center">
                     <Share2 className="w-4 h-4 mr-2 text-slate-500" />
-                    Buffer Entegrasyonu
+                    Zapier Entegrasyonu
                   </td>
                   <td className="py-3 px-4 text-center">❌</td>
                   <td className="py-3 px-4 text-center">✅</td>

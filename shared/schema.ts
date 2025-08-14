@@ -37,11 +37,11 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Social accounts for Buffer integration
+// Social accounts for external integrations
 export const socialAccounts = pgTable("social_accounts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  provider: varchar("provider").notNull().default("buffer"), // "buffer"
+  provider: varchar("provider").notNull().default("zapier"), // "zapier"
   accessToken: text("access_token"),
   profileId: varchar("profile_id"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -70,7 +70,7 @@ export const postAssets = pgTable("post_assets", {
   scheduledAt: timestamp("scheduled_at"),
   status: varchar("status").notNull().default("draft"), // "draft" | "scheduled" | "posted" | "failed"
   platform: varchar("platform").notNull(), // "instagram" | "linkedin" | "x"
-  externalId: varchar("external_id"), // Buffer task ID
+  externalId: varchar("external_id"), // external service ID
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

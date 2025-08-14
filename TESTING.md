@@ -78,6 +78,5 @@ curl -X POST "http://localhost:5000/api/integrations/zapier/publish" \
 - OpenAI API key gerekli (AI özellikler için)
 - Stripe entegrasyonu (ödeme için)
 - Zapier webhook URL (sosyal medya yayını için)
-- Buffer API token (fallback entegrasyon için)
 
 MVP hazır! 🚀

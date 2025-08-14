@@ -20,7 +20,7 @@ const navigation = [
   { name: "Gönderiler", href: "/posts", icon: FileText },
   { name: "AI İçerik Üret", href: "/ai-content", icon: Brain },
   { name: "Görsel Oluştur", href: "/image-generation", icon: Image },
-  { name: "Buffer Entegrasyonu", href: "/buffer-integration", icon: Share2 },
+  { name: "Zapier Entegrasyonu", href: "/zapier-integration", icon: Share2 },
 ];
 
 const secondaryNavigation = [

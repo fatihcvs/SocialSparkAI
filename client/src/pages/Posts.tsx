@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Edit, Trash2, Calendar, Share, Filter, Download } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, Share, Filter, Download, FileText } from "lucide-react";
 import type { PostAsset } from "@/types";
 
 export default function Posts() {
@@ -71,17 +71,15 @@ export default function Posts() {
     },
   });
 
-  const schedulePostMutation = useMutation({
-    mutationFn: async ({ postId, scheduledAt }: { postId: string; scheduledAt: string }) => {
-      const response = await apiRequest("POST", `/api/buffer/schedule/${postId}`, {
-        scheduledAt,
-      });
+  const sendPostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const response = await apiRequest("POST", `/api/posts/${postId}/publish`);
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Başarılı",
-        description: "Gönderi Buffer'da planlandı!",
+        description: "Gönderi Zapier'e iletildi!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
     },
@@ -183,18 +181,16 @@ export default function Posts() {
     });
   };
 
-  const handleScheduleNow = (post: PostAsset) => {
+  const handleSendNow = (post: PostAsset) => {
     if (user?.plan !== "pro") {
       toast({
         title: "Pro Özelliği",
-        description: "Buffer planlama için Pro planı gerekli",
+        description: "Zapier gönderimi için Pro planı gerekli",
         variant: "destructive",
       });
       return;
     }
-
-    const scheduledAt = new Date().toISOString();
-    schedulePostMutation.mutate({ postId: post.id, scheduledAt });
+    sendPostMutation.mutate(post.id);
   };
 
   if (isLoading) {
@@ -322,12 +318,12 @@ export default function Posts() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleScheduleNow(post)}
-                        disabled={schedulePostMutation.isPending}
-                        data-testid={`button-schedule-${post.id}`}
+                        onClick={() => handleSendNow(post)}
+                        disabled={sendPostMutation.isPending}
+                        data-testid={`button-send-${post.id}`}
                       >
                         <Share className="w-4 h-4 mr-1" />
-                        Şimdi Gönder
+                        Zapier ile Gönder
                       </Button>
                     )}
                     

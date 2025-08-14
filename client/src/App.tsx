@@ -4,8 +4,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
-import { getAuthToken } from "@/lib/authUtils";
 
 // Pages
 import Landing from "@/pages/Landing";
@@ -14,7 +12,7 @@ import Calendar from "@/pages/Calendar";
 import Posts from "@/pages/Posts";
 import AIContent from "@/pages/AIContent";
 import ImageGeneration from "@/pages/ImageGeneration";
-import BufferIntegration from "@/pages/BufferIntegration";
+import ZapierIntegration from "@/pages/ZapierIntegration";
 import SocialPublishing from "@/pages/SocialPublishing";
 import Billing from "@/pages/Billing";
 import Settings from "@/pages/Settings";
@@ -27,24 +25,6 @@ import TopBar from "@/components/TopBar";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
-
-  // Set up auth token interceptor
-  useEffect(() => {
-    const token = getAuthToken();
-    if (token) {
-      // Add token to all API requests
-      const originalFetch = window.fetch;
-      window.fetch = function(input, init = {}) {
-        const headers = new Headers(init.headers || {});
-        headers.set('Authorization', `Bearer ${token}`);
-        
-        return originalFetch(input, {
-          ...init,
-          headers,
-        });
-      };
-    }
-  }, []);
 
   if (isLoading) {
     return (
@@ -76,7 +56,7 @@ function Router() {
             <Route path="/posts" component={Posts} />
             <Route path="/ai-content" component={AIContent} />
             <Route path="/image-generation" component={ImageGeneration} />
-            <Route path="/buffer-integration" component={BufferIntegration} />
+            <Route path="/zapier-integration" component={ZapierIntegration} />
             <Route path="/social-publishing" component={SocialPublishing} />
             <Route path="/billing" component={Billing} />
             <Route path="/settings" component={Settings} />
