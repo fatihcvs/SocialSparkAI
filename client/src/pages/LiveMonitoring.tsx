@@ -48,17 +48,17 @@ export default function LiveMonitoring() {
     refetchInterval: 5000,
   });
 
-  const { data: healthData } = useQuery({
+  const { data: healthData } = useQuery<{status?: any}>({
     queryKey: ["/api/autonomous/health"],
     refetchInterval: 5000,
   });
 
-  const { data: analysisData } = useQuery({
+  const { data: analysisData } = useQuery<{recent?: any[], totalAnalyses?: number}>({
     queryKey: ["/api/autonomous/analysis"],
     refetchInterval: 10000,
   });
 
-  const { data: fixData } = useQuery({
+  const { data: fixData } = useQuery<{successful?: number, history?: any[]}>({
     queryKey: ["/api/autonomous/fixes"],
     refetchInterval: 10000,
   });

@@ -69,19 +69,19 @@ export default function AutonomousMonitor() {
   });
 
   // Fetch health metrics
-  const { data: healthData } = useQuery({
+  const { data: healthData } = useQuery<{metrics?: any, issues?: any[]}>({
     queryKey: ["/api/autonomous/health"],
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
   // Fetch analysis history
-  const { data: analysisData } = useQuery({
+  const { data: analysisData } = useQuery<{recent?: any[]}>({
     queryKey: ["/api/autonomous/analysis"],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Fetch fix history
-  const { data: fixData } = useQuery({
+  const { data: fixData } = useQuery<{recent?: any[], history?: any[]}>({
     queryKey: ["/api/autonomous/fixes"],
     refetchInterval: 15000, // Refresh every 15 seconds
   });
