@@ -42,11 +42,27 @@ class AutoPullManager {
 
   async pullUpdates(): Promise<boolean> {
     try {
-      // Check for uncommitted changes
+      // Check for uncommitted changes and handle them automatically
       const status = execSync('git status --porcelain', { encoding: 'utf8' });
       if (status.trim()) {
-        this.log('⚠️ Uncommitted changes detected, skipping pull');
-        return false;
+        this.log('⚠️ Uncommitted changes detected, auto-committing...');
+        
+        try {
+          // Stage all changes
+          execSync('git add .', { stdio: 'pipe' });
+          
+          // Commit with auto-generated message
+          const timestamp = new Date().toISOString();
+          execSync(`git commit -m "🤖 Auto-commit before pull - ${timestamp}"`, { stdio: 'pipe' });
+          
+          this.log('✅ Local changes committed automatically');
+        } catch (commitError) {
+          this.log('⚠️ Could not auto-commit, using stash strategy...');
+          
+          // Fallback to stash strategy
+          execSync('git stash push -m "Auto-stash before pull"', { stdio: 'pipe' });
+          this.log('📦 Changes stashed temporarily');
+        }
       }
 
       // Pull updates
