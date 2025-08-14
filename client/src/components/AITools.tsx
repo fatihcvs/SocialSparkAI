@@ -3,11 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import type { User } from "@shared/schema";
 import { useLocation } from "wouter";
 import { MessageCircle, Image, Calendar, Crown } from "lucide-react";
 
 export default function AITools() {
-  const { user } = useAuth();
+  const { user } = useAuth() as { user: User | null };
   const [, setLocation] = useLocation();
 
   const tools = [
@@ -32,13 +33,13 @@ export default function AITools() {
       disabled: false,
     },
     {
-      id: "buffer",
-      title: "Buffer Planlama",
-      description: "Pro özelliği",
+      id: "social-publishing",
+      title: "Sosyal Medya Yayını",
+      description: "Zapier/Make entegrasyonu",
       icon: Calendar,
       iconColor: "text-orange-600",
       bgColor: "bg-orange-100",
-      route: "/buffer-integration",
+      route: "/social-publishing",
       disabled: user?.plan !== "pro",
       isPro: true,
     },

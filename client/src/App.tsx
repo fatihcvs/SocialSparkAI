@@ -15,6 +15,7 @@ import Posts from "@/pages/Posts";
 import AIContent from "@/pages/AIContent";
 import ImageGeneration from "@/pages/ImageGeneration";
 import BufferIntegration from "@/pages/BufferIntegration";
+import SocialPublishing from "@/pages/SocialPublishing";
 import Billing from "@/pages/Billing";
 import Settings from "@/pages/Settings";
 import Auth from "@/pages/Auth";
@@ -76,6 +77,7 @@ function Router() {
             <Route path="/ai-content" component={AIContent} />
             <Route path="/image-generation" component={ImageGeneration} />
             <Route path="/buffer-integration" component={BufferIntegration} />
+            <Route path="/social-publishing" component={SocialPublishing} />
             <Route path="/billing" component={Billing} />
             <Route path="/settings" component={Settings} />
             <Route component={NotFound} />

@@ -16,8 +16,9 @@ AI destekli sosyal medya içerik yönetimi ve planlama platformu. İçerik fikir
 - Gönderi durumu takibi (taslak, planlandı, yayınlandı)
 
 ### 🔗 Sosyal Medya Entegrasyonu
-- **Buffer API** entegrasyonu
-- Instagram, LinkedIn, Twitter/X otomatik paylaşım
+- **Zapier/Make webhook** entegrasyonu (Pro)
+- **Buffer API** entegrasyonu (Fallback)
+- Instagram, LinkedIn, Twitter/X, TikTok otomatik paylaşım
 - Multi-platform gönderi yönetimi
 
 ### 💰 Faturalama Sistemi
@@ -35,10 +36,11 @@ AI destekli sosyal medya içerik yönetimi ve planlama platformu. İçerik fikir
 ### Backend
 - **Node.js** + Express
 - **TypeScript**
-- **Prisma ORM** + PostgreSQL
+- **Drizzle ORM** + PostgreSQL
 - **JWT** + bcrypt authentication
 - **OpenAI API** (GPT-4o + DALL-E 3)
-- **Buffer API**
+- **Zapier/Make Webhooks**
+- **Buffer API** (Fallback)
 - **Stripe** payments
 - **node-cron** scheduler
 
@@ -57,7 +59,8 @@ AI destekli sosyal medya içerik yönetimi ve planlama platformu. İçerik fikir
 - PostgreSQL
 - OpenAI API anahtarı
 - Stripe hesabı (test mode)
-- Buffer hesabı (opsiyonel)
+- Zapier/Make hesabı (Pro özellikler için)
+- Buffer hesabı (fallback entegrasyon)
 
 ### 1. Projeyi Klonlayın
 ```bash
@@ -77,8 +80,9 @@ cp .env.example .env
 - `STRIPE_SECRET_KEY` - Stripe gizli anahtarınız
 - `STRIPE_WEBHOOK_SECRET` - Stripe webhook gizli anahtarınız
 - `STRIPE_PRICE_PRO_MONTH` - Stripe Pro plan fiyat ID'si
-- `BUFFER_ACCESS_TOKEN` - Buffer API token'ınız
-- `BUFFER_PROFILE_ID` - Buffer profil ID'niz
+- `ZAPIER_HOOK_URL` - Zapier/Make webhook URL'niz (Pro)
+- `BUFFER_ACCESS_TOKEN` - Buffer API token'ınız (fallback)
+- `BUFFER_PROFILE_ID` - Buffer profil ID'niz (fallback)
 - `JWT_SECRET` - Güçlü bir JWT gizli anahtarı
 - `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe genel anahtarınız
 

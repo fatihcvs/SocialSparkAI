@@ -15,6 +15,7 @@ import { stripeService } from "./services/stripeService";
 import { bufferService } from "./services/bufferService";
 import { schedulerService } from "./jobs/scheduler";
 import type { AuthRequest } from "./middlewares/auth";
+import integrationRoutes from "./routes/integrations";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Security middleware
@@ -378,73 +379,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Buffer routes (Pro only)
-  app.post("/api/buffer/connect", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
-    try {
-      // For MVP, we'll use environment variables
-      // In production, this would handle OAuth flow
-      res.json({ 
-        message: "Buffer entegrasyonu aktif",
-        profiles: await bufferService.getProfiles()
-      });
-    } catch (error) {
-      console.error("Buffer connect error:", error);
-      res.status(500).json({
-        error: { code: "INTERNAL_ERROR", message: "Buffer'a bağlanılamadı" }
-      });
-    }
-  });
+  // Integration routes (Zapier/Make webhook)
+  app.use("/api/integrations", integrationRoutes);
 
-  app.post("/api/buffer/schedule/:postId", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
-    try {
-      const schema = z.object({
-        scheduledAt: z.string().datetime(),
-      });
-
-      const { scheduledAt } = schema.parse(req.body);
-      
-      const post = await contentService.schedulePost(
-        req.params.postId,
-        new Date(scheduledAt)
-      );
-
-      res.json(post);
-    } catch (error) {
-      console.error("Schedule post error:", error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({
-          error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
+  // Buffer routes (Pro only) - Disabled when Zapier webhook is configured
+  if (!process.env.ZAPIER_HOOK_URL) {
+    app.post("/api/buffer/connect", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
+      try {
+        res.json({ 
+          message: "Buffer entegrasyonu aktif",
+          profiles: await bufferService.getProfiles()
+        });
+      } catch (error) {
+        console.error("Buffer connect error:", error);
+        res.status(500).json({
+          error: { code: "INTERNAL_ERROR", message: "Buffer'a bağlanılamadı" }
         });
       }
-      res.status(500).json({
-        error: { code: "INTERNAL_ERROR", message: "Gönderi planlanamadı" }
-      });
-    }
-  });
+    });
 
-  app.post("/api/buffer/publish/:postId", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
-    try {
-      const post = await contentService.publishPostNow(req.params.postId);
-      res.json(post);
-    } catch (error) {
-      console.error("Publish post error:", error);
-      res.status(500).json({
-        error: { code: "INTERNAL_ERROR", message: "Gönderi yayınlanamadı" }
-      });
-    }
-  });
+    app.post("/api/buffer/schedule/:postId", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
+      try {
+        const schema = z.object({
+          scheduledAt: z.string().datetime(),
+        });
 
-  app.get("/api/buffer/status/:postId", authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      const status = await contentService.checkPostStatus(req.params.postId);
-      res.json({ status });
-    } catch (error) {
-      console.error("Get post status error:", error);
-      res.status(500).json({
-        error: { code: "INTERNAL_ERROR", message: "Gönderi durumu alınamadı" }
-      });
-    }
-  });
+        const { scheduledAt } = schema.parse(req.body);
+        
+        const post = await contentService.schedulePost(
+          req.params.postId,
+          new Date(scheduledAt)
+        );
+
+        res.json(post);
+      } catch (error) {
+        console.error("Schedule post error:", error);
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({
+            error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
+          });
+        }
+        res.status(500).json({
+          error: { code: "INTERNAL_ERROR", message: "Gönderi planlanamadı" }
+        });
+      }
+    });
+
+    app.post("/api/buffer/publish/:postId", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
+      try {
+        const post = await contentService.publishPostNow(req.params.postId);
+        res.json(post);
+      } catch (error) {
+        console.error("Publish post error:", error);
+        res.status(500).json({
+          error: { code: "INTERNAL_ERROR", message: "Gönderi yayınlanamadı" }
+        });
+      }
+    });
+
+    app.get("/api/buffer/status/:postId", authenticateToken, async (req: AuthRequest, res) => {
+      try {
+        const status = await contentService.checkPostStatus(req.params.postId);
+        res.json({ status });
+      } catch (error) {
+        console.error("Get post status error:", error);
+        res.status(500).json({
+          error: { code: "INTERNAL_ERROR", message: "Gönderi durumu alınamadı" }
+        });
+      }
+    });
+  }
 
   // Export routes
   app.get("/api/export/csv", authenticateToken, async (req: AuthRequest, res) => {

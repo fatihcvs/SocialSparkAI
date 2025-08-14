@@ -174,7 +174,7 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
   updatedAt: true,
 });
 
-// Types
+// Types  
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type SocialAccount = typeof socialAccounts.$inferSelect;
