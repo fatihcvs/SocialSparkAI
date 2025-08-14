@@ -9,13 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Brain, Sparkles, Copy, Clock, Lightbulb } from "lucide-react";
+import { Brain, Sparkles, Copy, Clock, Lightbulb, Send, Image } from "lucide-react";
 import CaptionGenerator from "@/components/CaptionGenerator";
 import type { ContentIdea, CaptionVariant } from "@/types";
 
 export default function AIContent() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"ideas" | "captions">("ideas");
+  const [activeTab, setActiveTab] = useState<"ideas" | "captions" | "images">("ideas");
   
   // Ideas form state
   const [ideasForm, setIdeasForm] = useState({
@@ -34,8 +34,17 @@ export default function AIContent() {
     keywords: "",
   });
 
+  // Image form state
+  const [imageForm, setImageForm] = useState({
+    prompt: "",
+    aspectRatio: "1:1" as "1:1" | "16:9" | "9:16",
+    styleHints: "",
+  });
+
   const [generatedIdeas, setGeneratedIdeas] = useState<ContentIdea | null>(null);
   const [generatedCaptions, setGeneratedCaptions] = useState<CaptionVariant[]>([]);
+  const [generatedImage, setGeneratedImage] = useState<{ url: string } | null>(null);
+  const [selectedIdea, setSelectedIdea] = useState<string | null>(null);
 
   const { data: contentIdeas = [] } = useQuery<ContentIdea[]>({
     queryKey: ["/api/content-ideas"],
@@ -87,6 +96,27 @@ export default function AIContent() {
     },
   });
 
+  const generateImageMutation = useMutation({
+    mutationFn: async (data: typeof imageForm) => {
+      const response = await apiRequest("POST", "/api/ai/generate/image", data);
+      return response.json();
+    },
+    onSuccess: (data: { url: string }) => {
+      setGeneratedImage(data);
+      toast({
+        title: "Başarılı",
+        description: "Görsel oluşturuldu!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleGenerateIdeas = (e: React.FormEvent) => {
     e.preventDefault();
     if (!ideasForm.topic || !ideasForm.targetAudience || !ideasForm.platform || !ideasForm.tone) {
@@ -113,11 +143,37 @@ export default function AIContent() {
     generateCaptionsMutation.mutate(captionForm);
   };
 
+  const handleGenerateImage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!imageForm.prompt.trim()) {
+      toast({
+        title: "Hata",
+        description: "Lütfen görsel açıklaması girin",
+        variant: "destructive",
+      });
+      return;
+    }
+    generateImageMutation.mutate(imageForm);
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
       title: "Kopyalandı",
       description: "Metin panoya kopyalandı",
+    });
+  };
+
+  const generateCaptionFromIdea = (ideaTitle: string, ideaAngle: string) => {
+    setActiveTab("captions");
+    setCaptionForm({
+      ...captionForm,
+      rawIdea: `${ideaTitle}: ${ideaAngle}`,
+    });
+    
+    toast({
+      title: "Hazırlandı",
+      description: "Caption üretimi için form dolduruldu",
     });
   };
 
@@ -139,7 +195,7 @@ export default function AIContent() {
           AI İçerik Üret
         </h1>
         <p className="text-slate-600">
-          Yapay zeka ile içerik fikirleri ve caption'lar oluşturun
+          Yapay zeka ile içerik fikirleri, caption'lar ve görseller oluşturun
         </p>
       </div>
 
@@ -168,6 +224,18 @@ export default function AIContent() {
         >
           <Sparkles className="w-4 h-4 inline mr-2" />
           Caption Üret
+        </button>
+        <button
+          onClick={() => setActiveTab("images")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === "images"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+          data-testid="tab-images"
+        >
+          <Image className="w-4 h-4 inline mr-2" />
+          Görsel Üret
         </button>
       </div>
 
@@ -325,6 +393,18 @@ export default function AIContent() {
                             </div>
                           )}
                         </div>
+                        <div className="mt-3 pt-3 border-t border-slate-100">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateCaptionFromIdea(idea.title, idea.angle)}
+                            className="w-full"
+                            data-testid={`button-caption-from-idea-${index}`}
+                          >
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Caption Üret
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -446,12 +526,34 @@ export default function AIContent() {
                       <p className="text-slate-900 mb-3 whitespace-pre-wrap">
                         {variant.caption}
                       </p>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1 mb-3">
                         {variant.hashtags.map((hashtag, hashIndex) => (
                           <span key={hashIndex} className="text-blue-600 text-sm">
                             {hashtag}
                           </span>
                         ))}
+                      </div>
+                      <div className="pt-3 border-t border-slate-100">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(`${variant.caption}\n\n${variant.hashtags.join(' ')}`)}
+                            className="flex-1"
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Kopyala
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => window.open('/social-publishing', '_blank')}
+                            className="flex-1"
+                            data-testid={`button-create-post-${index}`}
+                          >
+                            <Send className="w-4 h-4 mr-2" />
+                            Post Oluştur
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -461,6 +563,117 @@ export default function AIContent() {
                   <Sparkles className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                   <p className="text-slate-500">
                     Caption varyantları oluşturmak için formu doldurun
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Images Tab */}
+      {activeTab === "images" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Image Form */}
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                AI Görsel Oluştur
+              </h2>
+              
+              <form onSubmit={handleGenerateImage} className="space-y-4">
+                <div>
+                  <Label htmlFor="prompt">Görsel Açıklaması</Label>
+                  <Textarea
+                    id="prompt"
+                    placeholder="Professional social media post image with modern design, blue and purple colors..."
+                    value={imageForm.prompt}
+                    onChange={(e) => setImageForm({ ...imageForm, prompt: e.target.value })}
+                    data-testid="input-image-prompt"
+                    rows={4}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="aspectRatio">En-Boy Oranı</Label>
+                  <Select onValueChange={(value) => setImageForm({ ...imageForm, aspectRatio: value as "1:1" | "16:9" | "9:16" })}>
+                    <SelectTrigger data-testid="select-image-aspect-ratio">
+                      <SelectValue placeholder="En-boy oranı seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1:1">1:1 (Instagram Post)</SelectItem>
+                      <SelectItem value="16:9">16:9 (LinkedIn, YouTube)</SelectItem>
+                      <SelectItem value="9:16">9:16 (Instagram Story)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="styleHints">Stil İpuçları (isteğe bağlı)</Label>
+                  <Input
+                    id="styleHints"
+                    placeholder="minimalist, modern, colorful, photography..."
+                    value={imageForm.styleHints}
+                    onChange={(e) => setImageForm({ ...imageForm, styleHints: e.target.value })}
+                    data-testid="input-image-style-hints"
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={generateImageMutation.isPending}
+                  data-testid="button-generate-image"
+                >
+                  <Image className="w-4 h-4 mr-2" />
+                  {generateImageMutation.isPending ? "Oluşturuluyor..." : "Görsel Oluştur"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Generated Image */}
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                Oluşturulan Görsel
+              </h2>
+
+              {generatedImage ? (
+                <div className="space-y-4">
+                  <div className="relative bg-slate-50 rounded-lg overflow-hidden">
+                    <img
+                      src={generatedImage.url}
+                      alt="AI Oluşturulan Görsel"
+                      className="w-full h-auto rounded-lg"
+                      data-testid="generated-image"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => copyToClipboard(generatedImage.url)}
+                      className="flex-1"
+                      data-testid="button-copy-image-url"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      URL Kopyala
+                    </Button>
+                    <Button
+                      onClick={() => window.open(generatedImage.url, '_blank')}
+                      className="flex-1"
+                      data-testid="button-download-image"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      İndir
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Image className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-500">
+                    AI görsel oluşturmak için formu doldurun
                   </p>
                 </div>
               )}

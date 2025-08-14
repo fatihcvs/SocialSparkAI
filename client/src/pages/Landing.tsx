@@ -13,7 +13,7 @@ export default function Landing() {
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
               <Zap className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-semibold text-slate-900">AI Sosyal Medya Planlayıcı</span>
+            <span className="text-xl font-semibold text-slate-900">SocialSparkAI</span>
           </div>
           <Link href="/auth">
             <Button data-testid="button-login">
@@ -26,12 +26,12 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-20 text-center">
         <h1 className="text-5xl font-bold text-slate-900 mb-6">
-          AI ile Sosyal Medya 
-          <span className="text-blue-600"> Yönetiminizi</span> Dönüştürün
+          AI ile Sosyal Medya İçerik 
+          <span className="text-blue-600"> Üretimi</span> ve <span className="text-purple-600">Paylaşımı</span>
         </h1>
         <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
-          İçerik fikirleri oluşturun, görsel üretin, gönderileri planlayın ve 
-          tüm sosyal medya hesaplarınızı tek yerden yönetin.
+          AI destekli içerik fikirleri oluşturun, caption yazın, görseller üretin ve 
+          Zapier entegrasyonu ile tek tıkla Facebook, Instagram, LinkedIn'e paylaşın.
         </p>
         <Link href="/auth">
           <Button size="lg" className="text-lg px-8 py-4" data-testid="button-get-started">
@@ -51,7 +51,7 @@ export default function Landing() {
               <Brain className="w-12 h-12 text-blue-600 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">AI İçerik Üretimi</h3>
               <p className="text-slate-600">
-                OpenAI ile güçlendirilmiş içerik fikirleri ve caption'lar
+                OpenAI GPT-4o ile akıllı içerik fikirleri, caption'lar ve görseller
               </p>
             </CardContent>
           </Card>
@@ -59,9 +59,9 @@ export default function Landing() {
           <Card className="text-center">
             <CardContent className="pt-6">
               <Calendar className="w-12 h-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">İçerik Takvimi</h3>
+              <h3 className="text-xl font-semibold mb-2">Tek Tık Paylaşım</h3>
               <p className="text-slate-600">
-                Gönderilerinizi planlayın ve zamanında yayınlayın
+                Ürettiğiniz içerikleri anında tüm sosyal medya platformlarına gönderin
               </p>
             </CardContent>
           </Card>
@@ -69,9 +69,9 @@ export default function Landing() {
           <Card className="text-center">
             <CardContent className="pt-6">
               <Share2 className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Zapier Entegrasyonu</h3>
+              <h3 className="text-xl font-semibold mb-2">Çoklu Platform Desteği</h3>
               <p className="text-slate-600">
-                Instagram, LinkedIn, Twitter/X'e Zapier ile otomatik paylaşım
+                Facebook, Instagram, Twitter, LinkedIn, TikTok'a optimize edilmiş paylaşım
               </p>
             </CardContent>
           </Card>
@@ -192,10 +192,10 @@ export default function Landing() {
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
               <Zap className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-semibold">AI Sosyal Medya Planlayıcı</span>
+            <span className="text-xl font-semibold">SocialSparkAI</span>
           </div>
           <p className="text-slate-400">
-            © 2024 AI Sosyal Medya Planlayıcı. Tüm hakları saklıdır.
+            © 2024 SocialSparkAI. Tüm hakları saklıdır.
           </p>
         </div>
       </footer>

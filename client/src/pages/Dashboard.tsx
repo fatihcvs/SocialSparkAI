@@ -97,7 +97,7 @@ export default function Dashboard() {
               <div className="ml-4">
                 <div className="text-sm font-medium text-slate-500">Günlük Limit</div>
                 <div className="text-2xl font-semibold text-slate-900" data-testid="stat-daily-limit">
-                  --
+                  {stats?.dailyUsage || 0}/{stats?.dailyLimit || 0}
                 </div>
               </div>
             </div>

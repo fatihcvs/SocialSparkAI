@@ -18,7 +18,7 @@ import {
   type ApiUsage,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, count, gte, lte, sql } from "drizzle-orm";
+import { eq, and, desc, count, gte, lt, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -246,6 +246,8 @@ export class DatabaseStorage implements IStorage {
     totalPosts: number;
     scheduledPosts: number;
     aiIdeas: number;
+    dailyLimit?: number;
+    dailyUsage?: number;
   }> {
     const [totalPostsResult] = await db
       .select({ count: count() })
@@ -267,10 +269,38 @@ export class DatabaseStorage implements IStorage {
       .from(contentIdeas)
       .where(eq(contentIdeas.userId, userId));
 
+    // Get user plan for daily limit
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    const dailyLimits = {
+      free: 5,
+      pro: 50,
+      admin: 999
+    };
+    const dailyLimit = dailyLimits[user?.plan as keyof typeof dailyLimits] || dailyLimits.free;
+
+    // Today's API usage
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const [dailyUsageResult] = await db
+      .select({ count: count() })
+      .from(apiUsage)
+      .where(
+        and(
+          eq(apiUsage.userId, userId),
+          gte(apiUsage.date, today),
+          lt(apiUsage.date, tomorrow)
+        )
+      );
+
     return {
       totalPosts: totalPostsResult.count,
       scheduledPosts: scheduledPostsResult.count,
       aiIdeas: aiIdeasResult.count,
+      dailyLimit,
+      dailyUsage: dailyUsageResult.count,
     };
   }
 

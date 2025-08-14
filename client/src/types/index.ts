@@ -50,4 +50,6 @@ export interface UserStats {
   totalPosts: number;
   scheduledPosts: number;
   aiIdeas: number;
+  dailyLimit?: number;
+  dailyUsage?: number;
 }
