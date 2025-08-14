@@ -1,0 +1,110 @@
+Task: Audit & fix the SocialSparkAI repo so the MVP runs end-to-end (API + React + Zapier webhook). Print a concise report of findings and patches.
+
+1) Quick scan
+
+Print tree -L 3 from repo root.
+
+Verify these files exist; if missing, create minimal versions:
+
+server/src/index.(ts|js) (Express app)
+
+server/src/routes/integrations.(ts|js) (Zapier route)
+
+client (Vite React app with API calls using import.meta.env.VITE_API_BASE_URL)
+
+.env.example (see keys below)
+
+Confirm only one ORM is used (Drizzle or Prisma). If both are present, keep the one actually referenced in code and remove the other’s config/scripts.
+
+2) .env hygiene
+
+Ensure .env.example contains (do not put secrets):
+
+NODE_ENV=development
+PORT=
+DATABASE_URL=
+JWT_SECRET=
+OPENAI_API_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_PRO_MONTH=
+ZAPIER_HOOK_URL=
+BUFFER_ACCESS_TOKEN=
+BUFFER_PROFILE_ID=
+VITE_API_BASE_URL=
+VITE_STRIPE_PUBLISHABLE_KEY=
+VITE_HAS_ZAPIER=true
+
+
+Add a note in README that only VITE_* keys are exposed to the client.
+
+3) Server hardening
+
+In server/src/index: add helmet, cors, express.json, and express-rate-limit.
+
+Use const PORT = process.env.PORT || 3001; (never hardcode another port).
+
+Add GET /api/health → { ok: true }.
+
+Wire routes: app.use('/api/integrations', integrationsRouter).
+
+4) Zapier webhook route
+
+server/src/routes/integrations.(ts|js) must expose:
+
+POST /api/integrations/zapier/publish
+
+Validate body with Zod (or manual):
+{ caption: string; imageUrl?: string; platform?: string; scheduledAt?: string }
+
+If !process.env.ZAPIER_HOOK_URL → res.status(400).json({ error:{ code:'MissingHook', message:'Set ZAPIER_HOOK_URL' }}).
+
+Else forward with axios.post(process.env.ZAPIER_HOOK_URL, body).
+
+On success: res.status(202).json({ ok:true }); on failure: 502 { error:{ code:'ForwardFailed', message } }.
+
+Install missing deps: axios, zod (if used).
+
+5) Client wiring (Vite)
+
+Ensure API calls use import.meta.env.VITE_API_BASE_URL.
+
+Rename “Schedule via Buffer” button to “Send to Zapier/Make” and POST to /api/integrations/zapier/publish.
+
+Hide the button if VITE_HAS_ZAPIER is not true (or if server returns MissingHook).
+
+6) Scripts
+
+Root package.json:
+
+{ "scripts": {
+    "dev": "npm --prefix server run dev & npm --prefix client run dev",
+    "start": "npm --prefix server run start",
+    "postinstall": "npm --prefix server i && npm --prefix client i"
+  }}
+
+
+server/package.json: ensure "dev" (nodemon/ts-node), "start" (node dist), and build steps if TS.
+
+7) Smoke tests (run and show output)
+
+Start dev servers.
+
+GET /api/health → expect 200 { ok:true }.
+
+If ZAPIER_HOOK_URL is set in Replit Secrets, run:
+
+curl -s -X POST "$API_BASE/api/integrations/zapier/publish" \
+ -H "Content-Type: application/json" \
+ -d '{"caption":"Hello from SocialSparkAI 🚀","imageUrl":"https://picsum.photos/800","platform":"instagram","scheduledAt":"2030-01-01T10:00:00Z"}'
+
+
+Expect HTTP 202.
+
+Report any failing endpoints with stack traces.
+
+8) Output
+
+List files changed/created, packages added/removed, and exact commands to run the app.
+
+If both Prisma and Drizzle were present, state which one remains and why.

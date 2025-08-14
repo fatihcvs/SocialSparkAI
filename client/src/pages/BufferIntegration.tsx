@@ -144,7 +144,7 @@ export default function BufferIntegration() {
                 Buffer Hesabınızı Bağlayın
               </h3>
               <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                Buffer hesabınızı bağlayarak gönderilerinizi Instagram, LinkedIn ve Twitter/X'te 
+                Zapier/Make hesabınızı bağlayarak gönderilerinizi Instagram, LinkedIn ve Twitter/X'te 
                 otomatik olarak zamanlayabilir ve paylaşabilirsiniz.
               </p>
               <Button 
@@ -153,7 +153,7 @@ export default function BufferIntegration() {
                 data-testid="button-connect-buffer"
               >
                 <Share2 className="w-4 h-4 mr-2" />
-                {isConnecting ? "Bağlanıyor..." : "Buffer'ı Bağla"}
+                {isConnecting ? "Bağlanıyor..." : "Zapier/Make'i Bağla"}
               </Button>
             </div>
           ) : (
