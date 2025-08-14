@@ -70,14 +70,14 @@ export default function Billing() {
   ];
 
   const proPlanFeatures = [
-    "Günlük 50 AI çağrısı",
-    "Zapier ile otomatik paylaşım",
-    "Gelişmiş AI özellikler",
-    "Detaylı analitik ve raporlar",
-    "Öncelikli destek",
-    "CSV export",
-    "Zamanlama özellikleri",
-    "Sınırsız gönderi",
+    "Sınırsız AI çağrısı",
+    "DALL-E 3 görsel üretimi",
+    "Zapier/Make webhook entegrasyonu",
+    "Tüm sosyal medya platformları",
+    "Otomatik içerik zamanlaması",
+    "Gelişmiş analitik ve raporlar",
+    "CSV export ve data yönetimi",
+    "Öncelikli teknik destek",
   ];
 
   if (isLoading) {
@@ -319,30 +319,79 @@ export default function Billing() {
         </CardContent>
       </Card>
 
+      {/* Success Message for URL params */}
+      {new URLSearchParams(window.location.search).get('payment_status') === 'success' && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <Check className="w-6 h-6 text-green-600" />
+              <div>
+                <h3 className="font-medium text-green-900">Ödeme Başarılı!</h3>
+                <p className="text-sm text-green-700">
+                  Pro planınız aktifleştirildi. Tüm premium özelliklere erişiminiz bulunuyor.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Payment Info */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">
-            Ödeme Bilgileri
-          </h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Ödeme Bilgileri</h2>
+          
           <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <CreditCard className="w-5 h-5 text-slate-500" />
-              <span className="text-slate-600">
-                Tüm ödemeler Stripe ile güvenli bir şekilde işlenir
-              </span>
+            <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg">
+              <Shield className="w-5 h-5 text-blue-600" />
+              <div>
+                <h4 className="font-medium text-blue-900">Güvenli Ödeme</h4>
+                <p className="text-sm text-blue-700">
+                  İyzico güvenli ödeme sistemi ile korunuyorsunuz
+                </p>
+              </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <Shield className="w-5 h-5 text-slate-500" />
-              <span className="text-slate-600">
-                İstediğiniz zaman planınızı iptal edebilirsiniz
-              </span>
+            
+            <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg">
+              <Check className="w-5 h-5 text-green-600" />
+              <div>
+                <h4 className="font-medium text-green-900">30 Gün Para İade Garantisi</h4>
+                <p className="text-sm text-green-700">
+                  Memnun kalmazsan 30 gün içinde para iadesi
+                </p>
+              </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <Clock className="w-5 h-5 text-slate-500" />
-              <span className="text-slate-600">
-                Aylık faturalandırma, yenileme otomatiktir
-              </span>
+            
+            <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg">
+              <Clock className="w-5 h-5 text-purple-600" />
+              <div>
+                <h4 className="font-medium text-purple-900">İstediğin Zaman İptal Et</h4>
+                <p className="text-sm text-purple-700">
+                  Abonelikni istediğin zaman iptal edebilirsin
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* FAQ Section */}
+      <Card>
+        <CardContent className="p-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Sık Sorulan Sorular</h2>
+          <div className="space-y-4">
+            <div className="border-l-4 border-blue-500 pl-4">
+              <h4 className="font-medium text-slate-900">Aboneliğimi nasıl iptal edebilirim?</h4>
+              <p className="text-sm text-slate-600 mt-1">
+                Hesap ayarlarınızdan istediğiniz zaman aboneliğinizi iptal edebilirsiniz.
+              </p>
+            </div>
+            
+            <div className="border-l-4 border-blue-500 pl-4">
+              <h4 className="font-medium text-slate-900">Para iade garantisi nasıl çalışır?</h4>
+              <p className="text-sm text-slate-600 mt-1">
+                İlk 30 gün içinde memnun kalmazsanız, tam para iadesi alırsınız.
+              </p>
             </div>
           </div>
         </CardContent>
