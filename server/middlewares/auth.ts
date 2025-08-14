@@ -3,7 +3,10 @@ import bcrypt from "bcrypt";
 import type { Request, Response, NextFunction } from "express";
 import { storage } from "../storage";
 
-const JWT_SECRET = process.env.JWT_SECRET || "7HQXcQhqf/7yGbgdaIyhntCYrBUWh4erRQ8EmOIKN2c=";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not set");
+}
 
 export interface AuthRequest extends Request {
   user?: {

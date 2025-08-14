@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Edit, Trash2, Calendar, Share, Filter, Download } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, Share, Filter, Download, FileText } from "lucide-react";
 import type { PostAsset } from "@/types";
 
 export default function Posts() {

@@ -25,12 +25,16 @@ interface BufferProfile {
   service_username: string;
 }
 
+interface BufferConnectionStatus {
+  profiles?: BufferProfile[];
+}
+
 export default function BufferIntegration() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const { data: connectionStatus } = useQuery({
+  const { data: connectionStatus } = useQuery<BufferConnectionStatus>({
     queryKey: ["/api/buffer/connect"],
     enabled: user?.plan === "pro",
     retry: false,

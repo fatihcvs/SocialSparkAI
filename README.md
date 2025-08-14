@@ -83,7 +83,7 @@ cp .env.example .env
 - `ZAPIER_HOOK_URL` - Zapier/Make webhook URL'niz (Pro)
 - `BUFFER_ACCESS_TOKEN` - Buffer API token'ınız (fallback)
 - `BUFFER_PROFILE_ID` - Buffer profil ID'niz (fallback)
-- `JWT_SECRET` - Güçlü bir JWT gizli anahtarı
+- `JWT_SECRET` - Güçlü bir JWT gizli anahtarı (tanımlanmazsa uygulama başlamaz)
 - `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe genel anahtarınız
 
 ### 3. Projeyi Başlatın

@@ -61,12 +61,10 @@ export class ContentService {
     postId: string,
     scheduledAt: Date
   ): Promise<PostAsset> {
-    const post = await storage.getPostAssets(postId);
-    if (!post || post.length === 0) {
+    const postAsset = await storage.getPostAsset(postId);
+    if (!postAsset) {
       throw new Error("Gönderi bulunamadı");
     }
-
-    const postAsset = post[0];
     
     try {
       const bufferUpdate = await bufferService.createUpdate(
@@ -96,12 +94,10 @@ export class ContentService {
   }
 
   async publishPostNow(postId: string): Promise<PostAsset> {
-    const post = await storage.getPostAssets(postId);
-    if (!post || post.length === 0) {
+    const postAsset = await storage.getPostAsset(postId);
+    if (!postAsset) {
       throw new Error("Gönderi bulunamadı");
     }
-
-    const postAsset = post[0];
     
     try {
       const bufferUpdate = await bufferService.createUpdate(
@@ -129,12 +125,10 @@ export class ContentService {
   }
 
   async checkPostStatus(postId: string): Promise<string> {
-    const post = await storage.getPostAssets(postId);
-    if (!post || post.length === 0) {
+    const postAsset = await storage.getPostAsset(postId);
+    if (!postAsset) {
       throw new Error("Gönderi bulunamadı");
     }
-
-    const postAsset = post[0];
     
     if (!postAsset.externalId) {
       return postAsset.status;
