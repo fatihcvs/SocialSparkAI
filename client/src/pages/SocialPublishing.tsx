@@ -36,12 +36,26 @@ export default function SocialPublishing() {
   const queryClient = useQueryClient();
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
   const [isSendingPost, setIsSendingPost] = useState(false);
+  const [activeTab, setActiveTab] = useState<"create" | "templates">("create");
 
-  const [testPost, setTestPost] = useState({
-    caption: "",
-    imageUrl: "",
-    platform: "" as "instagram" | "linkedin" | "x" | "tiktok" | "",
-    scheduledAt: "",
+  // Check for pre-filled content from URL params or localStorage
+  const [testPost, setTestPost] = useState(() => {
+    try {
+      const savedPost = localStorage.getItem('pendingPost');
+      if (savedPost) {
+        localStorage.removeItem('pendingPost');
+        return JSON.parse(savedPost);
+      }
+    } catch (error) {
+      console.error('Error parsing saved post:', error);
+    }
+    
+    return {
+      caption: "",
+      imageUrl: "",
+      platform: "" as "instagram" | "linkedin" | "x" | "tiktok" | "",
+      scheduledAt: "",
+    };
   });
 
   // Test webhook configuration
@@ -226,6 +240,100 @@ export default function SocialPublishing() {
         </CardContent>
       </Card>
 
+      {/* Post Creation */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Send className="w-5 h-5" />
+            Sosyal Medya Gönderisi Oluştur
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleSendTestPost(); }} className="space-y-4">
+            <div>
+              <Label htmlFor="platform">Platform Seçin</Label>
+              <Select onValueChange={(value) => setTestPost({ ...testPost, platform: value as any })}>
+                <SelectTrigger data-testid="select-platform">
+                  <SelectValue placeholder={testPost.platform ? `${getPlatformIcon(testPost.platform)} ${testPost.platform.charAt(0).toUpperCase() + testPost.platform.slice(1)}` : "Platform seçin"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="instagram">📸 Instagram</SelectItem>
+                  <SelectItem value="linkedin">💼 LinkedIn</SelectItem>
+                  <SelectItem value="x">🐦 Twitter/X</SelectItem>
+                  <SelectItem value="tiktok">🎵 TikTok</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="caption">İçerik Metni</Label>
+              <Textarea
+                id="caption"
+                placeholder="Sosyal medya gönderinizin metni ve hashtag'leri..."
+                value={testPost.caption}
+                onChange={(e) => setTestPost({ ...testPost, caption: e.target.value })}
+                rows={6}
+                data-testid="textarea-caption"
+              />
+              <div className="text-xs text-slate-500 mt-1">
+                {testPost.platform === 'instagram' && '💡 Instagram: 2,200 karakter limite dikkat edin. #hashtag kullanımını önerilir'}
+                {testPost.platform === 'linkedin' && '💡 LinkedIn: 3,000 karakter limit. Profesyonel ton kullanın'}
+                {testPost.platform === 'x' && '💡 Twitter/X: 280 karakter limit. Kısa ve net mesajlar'}
+                {testPost.platform === 'tiktok' && '💡 TikTok: Trend hashtag\u0027leri ve emoji kullanın'}
+                {!testPost.platform && '💡 Platform seçtikten sonra özel rehberlik göreceksiniz'}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="imageUrl">Görsel URL'si (isteğe bağlı)</Label>
+              <Input
+                id="imageUrl"
+                placeholder="https://example.com/image.jpg"
+                value={testPost.imageUrl}
+                onChange={(e) => setTestPost({ ...testPost, imageUrl: e.target.value })}
+                data-testid="input-image-url"
+              />
+              {testPost.imageUrl && (
+                <div className="mt-2">
+                  <img 
+                    src={testPost.imageUrl} 
+                    alt="Preview" 
+                    className="w-32 h-32 object-cover rounded-lg border"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="scheduledAt">Zamanlama (isteğe bağlı)</Label>
+              <Input
+                id="scheduledAt"
+                type="datetime-local"
+                value={testPost.scheduledAt}
+                onChange={(e) => setTestPost({ ...testPost, scheduledAt: e.target.value })}
+                data-testid="input-scheduled-at"
+              />
+              <div className="text-xs text-slate-500 mt-1">
+                💡 Boş bırakırsanız hemen gönderilir
+              </div>
+            </div>
+
+            <Button 
+              type="submit"
+              className="w-full"
+              disabled={isSendingPost || !testPost.caption || !testPost.platform || user?.plan !== "pro"}
+              data-testid="button-send-post"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {isSendingPost ? "Gönderiliyor..." : "Zapier'e Gönder"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
       {/* Setup Instructions */}
       <Card>
         <CardHeader>
@@ -273,87 +381,7 @@ export default function SocialPublishing() {
         </CardContent>
       </Card>
 
-      {/* Test Post Sender */}
-      {webhookStatus?.configured && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Send className="w-5 h-5" />
-              Test Gönderisi
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <Label htmlFor="caption">Caption</Label>
-                <Textarea
-                  id="caption"
-                  placeholder="Post içeriğinizi yazın..."
-                  value={testPost.caption}
-                  onChange={(e) => setTestPost(prev => ({ ...prev, caption: e.target.value }))}
-                  className="mt-1"
-                  rows={3}
-                />
-              </div>
 
-              <div>
-                <Label htmlFor="imageUrl">Görsel URL (Opsiyonel)</Label>
-                <Input
-                  id="imageUrl"
-                  type="url"
-                  placeholder="https://example.com/image.jpg"
-                  value={testPost.imageUrl}
-                  onChange={(e) => setTestPost(prev => ({ ...prev, imageUrl: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="platform">Platform</Label>
-                <Select onValueChange={(value) => setTestPost(prev => ({ ...prev, platform: value as any }))}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Platform seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="instagram">
-                      {getPlatformIcon("instagram")} Instagram
-                    </SelectItem>
-                    <SelectItem value="linkedin">
-                      {getPlatformIcon("linkedin")} LinkedIn
-                    </SelectItem>
-                    <SelectItem value="x">
-                      {getPlatformIcon("x")} X (Twitter)
-                    </SelectItem>
-                    <SelectItem value="tiktok">
-                      {getPlatformIcon("tiktok")} TikTok
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="scheduledAt">Planlı Tarih (Opsiyonel)</Label>
-                <Input
-                  id="scheduledAt"
-                  type="datetime-local"
-                  value={testPost.scheduledAt}
-                  onChange={(e) => setTestPost(prev => ({ ...prev, scheduledAt: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <Button 
-              onClick={handleSendTestPost}
-              disabled={isSendingPost || user?.plan !== "pro" || !testPost.caption || !testPost.platform}
-              className="w-full"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              {isSendingPost ? "Gönderiliyor..." : "Test Gönderisi Yap"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Webhook Data Format */}
       <Card>

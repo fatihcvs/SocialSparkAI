@@ -21,7 +21,9 @@ router.post("/zapier/publish", authenticateToken, async (req: AuthRequest, res) 
 
     const schema = z.object({
       caption: z.string().min(1, "Caption gerekli"),
-      imageUrl: z.string().url().optional(),
+      imageUrl: z.string().optional().refine(val => !val || val === "" || z.string().url().safeParse(val).success, {
+        message: "Invalid URL format"
+      }),
       platform: z.enum(["instagram", "linkedin", "x", "tiktok"]),
       scheduledAt: z.string().datetime().optional(),
     });

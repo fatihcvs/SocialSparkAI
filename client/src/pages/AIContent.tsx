@@ -546,7 +546,17 @@ export default function AIContent() {
                           </Button>
                           <Button
                             size="sm"
-                            onClick={() => window.open('/social-publishing', '_blank')}
+                            onClick={() => {
+                              // Pre-fill post data and navigate
+                              const postData = {
+                                caption: `${variant.caption}\n\n${variant.hashtags.join(' ')}`,
+                                imageUrl: "",
+                                platform: "",
+                                scheduledAt: "",
+                              };
+                              localStorage.setItem('pendingPost', JSON.stringify(postData));
+                              window.open('/social-publishing', '_blank');
+                            }}
                             className="flex-1"
                             data-testid={`button-create-post-${index}`}
                           >
@@ -660,12 +670,21 @@ export default function AIContent() {
                       URL Kopyala
                     </Button>
                     <Button
-                      onClick={() => window.open(generatedImage.url, '_blank')}
+                      onClick={() => {
+                        const postData = {
+                          caption: "",
+                          imageUrl: generatedImage.url,
+                          platform: "",
+                          scheduledAt: "",
+                        };
+                        localStorage.setItem('pendingPost', JSON.stringify(postData));
+                        window.open('/social-publishing', '_blank');
+                      }}
                       className="flex-1"
-                      data-testid="button-download-image"
+                      data-testid="button-use-in-post"
                     >
                       <Send className="w-4 h-4 mr-2" />
-                      İndir
+                      Post'ta Kullan
                     </Button>
                   </div>
                 </div>
