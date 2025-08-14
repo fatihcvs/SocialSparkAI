@@ -34,6 +34,11 @@ interface LiveStats {
   }>;
 }
 
+interface AutonomousStatus {
+  isActive: boolean;
+  tasksCount: number;
+}
+
 export default function LiveMonitoring() {
   const [sessionProgress, setSessionProgress] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -43,7 +48,7 @@ export default function LiveMonitoring() {
   const sessionEnd = sessionStart + (60 * 60 * 1000); // 1 hour
 
   // Live data fetching every 5 seconds
-  const { data: autonomousStatus } = useQuery({
+  const { data: autonomousStatus } = useQuery<AutonomousStatus>({
     queryKey: ["/api/autonomous/status"],
     refetchInterval: 5000,
   });
@@ -62,6 +67,9 @@ export default function LiveMonitoring() {
     queryKey: ["/api/autonomous/fixes"],
     refetchInterval: 10000,
   });
+
+  const fixHistory = fixData?.history ?? [];
+  const analysisRecent = analysisData?.recent ?? [];
 
   // Update session progress and elapsed time
   useEffect(() => {
@@ -261,7 +269,7 @@ export default function LiveMonitoring() {
           <CardContent>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {/* Recent fixes */}
-              {fixData?.history?.slice(0, 5).map((fix: any, index: number) => (
+              {fixHistory.slice(0, 5).map((fix: any, index: number) => (
                 <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className={`h-2 w-2 rounded-full ${fix.success ? 'bg-green-500' : 'bg-red-500'}`} />
                   <div className="flex-1">
@@ -275,7 +283,7 @@ export default function LiveMonitoring() {
               ))}
 
               {/* Recent analyses */}
-              {analysisData?.recent?.slice(0, 3).map((analysis: any, index: number) => (
+              {analysisRecent.slice(0, 3).map((analysis: any, index: number) => (
                 <div key={index} className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
                   <Brain className="h-4 w-4 text-blue-500" />
                   <div className="flex-1">
@@ -289,7 +297,7 @@ export default function LiveMonitoring() {
               ))}
 
               {/* Default message if no activity */}
-              {(!fixData?.history?.length && !analysisData?.recent?.length) && (
+              {(!fixHistory.length && !analysisRecent.length) && (
                 <div className="text-center py-8 text-gray-500">
                   <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>Waiting for autonomous activities...</p>

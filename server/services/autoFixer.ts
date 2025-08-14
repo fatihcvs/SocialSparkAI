@@ -768,7 +768,7 @@ export const socialSparkAICache = new SocialSparkAIContentCache();
     } catch (error) {
       return {
         success: false,
-        details: `Health check failed: ${error.message}`
+        details: `Health check failed: ${(error as Error).message}`
       };
     }
   }
