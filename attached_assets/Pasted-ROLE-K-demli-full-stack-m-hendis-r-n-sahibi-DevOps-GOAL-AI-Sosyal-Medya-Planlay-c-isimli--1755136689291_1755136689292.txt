@@ -1,0 +1,368 @@
+ROLE:
+Kıdemli full-stack mühendis + ürün sahibi + DevOps.
+GOAL:
+“AI Sosyal Medya Planlayıcı” isimli bir SaaS web uygulamasını Replit’te sıfırdan kur, çalıştır ve temel fonksiyonları üretim kalitesinde hazırla. MVP; metin üretimi, görsel üretimi, takvimlenmiş paylaşım ve basit faturalama mantığını içermeli.
+
+0) TEKNOLOJİ YIĞINI
+
+Backend: Node.js + Express
+
+ORM: Prisma
+
+DB: SQLite (dev) → Postgres’e geçişe hazır şema
+
+Auth: JWT + bcrypt (email/password)
+
+Frontend: React (Vite) + TypeScript + TailwindCSS
+
+UI: shadcn/ui + lucide-react ikonlar
+
+Form/Validation: React Hook Form + Zod
+
+Rate Limit & Güvenlik: express-rate-limit, helmet, cors
+
+Queue (opsiyonel): BullMQ yerine MVP’de basit cron (node-cron)
+
+Ödeme (MVP): Stripe Checkout (test mode) — sadece “Pro” kilidi açmak için
+
+AI Metin: OpenAI Chat Completions (ör. gpt-4o-mini)
+
+AI Görsel: OpenAI Images (/v1/images/generations)
+
+Planlama/Paylaşım: Buffer API (Instagram/LinkedIn/Twitter/X destekli; gerçek paylaşım yerine MVP’de “taslak oluştur” + “Buffer’a gönder” akışı)
+
+Çevre: .env dosyası, README, script’ler, seed verisi
+
+1) PROJE YAPISI
+
+Aşağıdaki klasör yapısını oluştur:
+
+/app
+  /client            # Vite React (TS) + Tailwind + shadcn
+  /server            # Express API
+  /server/src
+    /config
+    /lib
+    /middlewares
+    /routes
+    /controllers
+    /services
+    /jobs
+    /prisma
+  /.env.example
+  /README.md
+
+
+NPM script’leri:
+
+root: dev (client ve server’ı beraber çalıştırır), build, start
+
+client: dev, build, preview
+
+server: dev (ts-node veya nodemon), start, prisma:generate, prisma:migrate, seed
+
+2) .ENV ÖRNEĞİ
+
+/.env.example dosyasını oluştur ve client ve server için gerekli değişkenleri ekle:
+
+# SERVER
+NODE_ENV=development
+PORT=3001
+DATABASE_URL="file:./dev.db"
+
+JWT_SECRET="change_this_long_random_string"
+
+OPENAI_API_KEY="sk-..."
+# Görsel üretimi için de aynı key kullanılacak
+
+BUFFER_ACCESS_TOKEN="buffer_xxx"        # Kullanıcıya OAuth akışı eklenecekse bunu dinamikle
+BUFFER_PROFILE_ID="1234567890"          # MVP: manuel test için
+
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+STRIPE_PRICE_PRO_MONTH="price_test_..."
+
+# CLIENT
+VITE_API_BASE_URL="http://localhost:3001"
+VITE_STRIPE_PUBLISHABLE_KEY="pk_test_..."
+
+
+Not: Production’da DATABASE_URL Postgres olabilir; Prisma şemasını buna uygun yaz.
+
+3) PRISMA ŞEMASI
+
+/server/src/prisma/schema.prisma:
+
+User: id, email (unique), passwordHash, name, role (“user” | “admin”), plan (“free” | “pro”), createdAt
+
+SocialAccount: id, userId (FK), provider (“buffer”), accessToken (opsiyonel), profileId, createdAt
+
+ContentIdea: id, userId, topic, targetAudience, tone, platform (“instagram” | “tiktok” | “linkedin” | “x”), ideas (Json), createdAt
+
+PostAsset: id, userId, ideaId (nullable), caption, hashtags, imageUrl (nullable), scheduledAt (nullable), status (“draft” | “scheduled” | “posted” | “failed”), externalId (Buffer task id), createdAt, updatedAt
+
+Subscription: id, userId, stripeCustomerId, stripeSubscriptionId, status, currentPeriodEnd
+
+Seed’e 1 demo kullanıcı (email: demo@demo.com, şifre: demo1234) ve 2–3 örnek ContentIdea + PostAsset ekle.
+
+4) BACKEND (EXPRESS)
+Orta Katmanlar ve Güvenlik
+
+helmet, cors, express.json, rate limit (IP başına dakikada X istek)
+
+Hata yakalayıcı global middleware
+
+JWT auth middleware (Authorization: Bearer <token>)
+
+Rotalar
+
+Auth (/api/auth)
+
+POST /register → email, password, name
+
+POST /login → token döndür
+
+GET /me → kullanıcı & plan bilgisi
+
+Billing (/api/billing)
+
+POST /checkout-session → Stripe Checkout session oluştur, Pro plan satın alımı
+
+POST /webhook → Stripe webhook; subscription status güncelle
+
+GET /status → aktif plan bilgisini döndür
+
+AI (/api/ai)
+
+POST /generate/ideas
+Body: topic, targetAudience, platform, tone, quantity
+Dönüş: fikir listesi, önerilen içerik takvimi (haftalık/günlük), konsept başlıklar
+
+POST /generate/caption
+Body: ideaId veya rawIdea, platform, tone, keywords
+Dönüş: 3–5 alternatif caption + hashtag setleri
+
+POST /generate/image
+Body: prompt, aspectRatio (ör. 1:1), styleHints
+Dönüş: imageUrl (geçici), ayrıca local /uploads kaydı (MVP’de base64 → file)
+
+Posts (/api/posts)
+
+GET / → kullanıcının post’ları (filtre: status, date range)
+
+POST / → caption, hashtags, imageUrl, scheduledAt, platform
+
+PATCH /:id → güncelle
+
+DELETE /:id
+
+Buffer (/api/buffer)
+
+POST /connect → (MVP’de ACCESS_TOKEN/PROFILE_ID env’den)
+
+POST /schedule/:postId → Buffer’a taslak/schedule gönder, externalId kaydet
+
+POST /publish/:postId → “immediate” gönderim (test)
+
+GET /status/:postId → Buffer task state
+
+Utilities (/api/export)
+
+GET /csv → kullanıcının post’larını CSV olarak indir
+
+Servisler
+
+openaiService.ts → chat & image generate
+
+bufferService.ts → Buffer istekleri
+
+stripeService.ts → checkout & webhook doğrulama
+
+contentService.ts → fikir ve post üretim mantığı (ton, platform rehberleriyle)
+
+Cron
+
+node-cron ile her 5 dakikada bir: scheduledAt’i gelmiş ve status=scheduled olan post’ları kontrol et → Buffer’a gönder → posted / failed güncelle.
+
+5) FRONTEND (REACT + TS + TAILWIND + SHADCN)
+Sayfalar
+
+Auth: Login / Register
+
+Dashboard:
+
+“Quick Start” sihirbazı: (topic, hedef kitle, platform, ton) → ideas & calendar
+
+İçerik takvimi (hafta/gün görünümü)
+
+“Generate Captions” paneli (çoklu varyant)
+
+“Generate Image” modali (prompt + stil ipuçları)
+
+Post listesi (status filtreleri, düzenleme, silme)
+
+“Schedule via Buffer” butonu (durum etiketi)
+
+Billing: Plan görseli, “Upgrade to Pro” Stripe Checkout butonu
+
+Settings: Profil, sosyal hesap (Buffer) bilgileri, API anahtar uyarıları
+
+UI Detayları
+
+Tailwind + shadcn kartları, butonları; yumuşak gölgeler, 2xl radius
+
+Responsive (mobil/desktop)
+
+Formlar Zod ile doğrulansın; invalid state’ler net hata mesajı versin
+
+Yükleniyor/toast durumları (sonuç ve hatalar)
+
+6) AI PROMPT STRATEJİSİ (SUNUCU TARAFI)
+
+Fikir üretimi (/generate/ideas)
+
+Sistem mesajında marka sesini ve platform rehberlerini belirt:
+
+Instagram: kısa, CTA, 25–30 hashtag sınırını zorlamadan 5–10 kaliteli set
+
+LinkedIn: değer odaklı, mini case/snippet, 1–3 hashtag
+
+X: 1–2 cümle, 1–2 hashtag, gerekiyorsa thread öner
+
+Kullanıcı girdilerine göre haftalık 3–5 post teması, içerik başlıkları, önerilen gün/saat blokları ver.
+
+Caption üretimi (/generate/caption)
+
+3–5 alternatif, farklı tonlar (bilgilendirici, eğlenceli, agresif CTA…)
+
+Platform limitlerine saygı (uzunluk, hashtag sayısı)
+
+Sonuçta JSON: { variant, caption, hashtags[] }[]
+
+Görsel üretimi (/generate/image)
+
+1:1 IG için varsayılan; styleHints (minimal, flat, neon, fotoğraf, mockup)
+
+Dönüşte img URL ve yerel kaydı yarat (MVP: base64 → /server/uploads)
+
+7) STRIPE CHECKOUT (MVP)
+
+Tek plan: Pro (aylık)
+
+Free planda: günlük 5 AI çağrısı sınırı, Buffer schedule kilitli
+
+Pro planda: limit 10x; Buffer schedule açık
+
+Checkout success/cancel route’ları (client tarafında)
+
+Webhook ile Subscription.status yönetimi ve User.plan güncelle
+
+8) GÜVENLİK & HATALAR
+
+Rate limit: AI endpoint’lerine kullanıcı başına dakika bazlı limit
+
+JWT süre: 7 gün; refresh flow (MVP’de basit: yeniden login)
+
+Dosya yükleme: Sadece AI çıktıları; kullanıcı upload’ını MVP’de kapat
+
+Hata formatı: { error: { code, message } } standardize
+
+9) TEST & KABUL KRİTERLERİ
+
+Mutlaka manuel test et ve README’ye yaz:
+
+Register/Login → JWT ile GET /api/auth/me geçiyor
+
+Ideas → topic=“coffee brand”, platform=instagram → 3+ fikir dönüyor
+
+Caption → ideaId ile 3–5 varyant dönüyor, hashtag’ler platforma uygun
+
+Image → prompt ile 1:1 görsel dönüyor, frontend’de görünüyor
+
+Post create → caption+imageUrl+scheduledAt ile draft oluşuyor
+
+Buffer schedule → post “scheduled” oluyor, externalId kaydoluyor
+
+Cron → scheduledAt gelince otomatik gönderim (testte immediate da dene)
+
+Stripe → Checkout → webhook → plan=pro güncelleniyor
+
+Export CSV → en az 3 satır içerir
+
+Rate limit → çok istek atınca 429 döner
+
+10) README HAZIRLA
+
+README.md içinde:
+
+Proje özeti, mimari, kurulum adımları, .env doldurma
+
+Geliştirme komutları
+
+Stripe test kart bilgileri (resmi test kartı)
+
+Demo kullanıcı bilgisi
+
+SSS: (Neden Buffer, IG doğrudan neden yok vb.)
+
+11) GERÇEKÇİ KISITLAR & NOTLAR
+
+Instagram/Facebook doğrudan paylaşım API’leri kısıtlıdır → MVP’de Buffer’la çalış.
+
+Canva API yerine OpenAI Images kullan (kota/kolaylık için).
+
+Production’a geçiş notu: Postgres URL, veritabanı migrasyonları, kalıcı depolama, OAuth flow.
+
+12) YAPILACAKLAR LİSTESİ (Agent adım adım)
+
+Proje iskeletini ve klasörleri oluştur.
+
+Client (Vite+TS+Tailwind+shadcn) ve Server (Express+TS) init et.
+
+Prisma kur, şemayı yaz, migrate + seed çalıştır.
+
+Auth rotaları ve JWT middleware’i yaz.
+
+AI servislerini OpenAI ile bağla (metin + görsel).
+
+Ideas/Caption/Image rotalarını tamamla.
+
+Post CRUD + status alanları + export CSV yaz.
+
+Buffer servis ve schedule/publish rotalarını ekle.
+
+Cron ile otomatik gönderim kontrolü ekle.
+
+Stripe Checkout + webhook tamamla; plan kilitlerini uygula.
+
+Frontend ekranlarını tamamla (Auth, Dashboard, Calendar, Posts, Billing, Settings).
+
+Rate limit, helmet, cors, hata yakalayıcı ekle.
+
+README ve .env.example’ı doldur.
+
+Tüm kabul kriterlerini elle test et ve hataları düzelt.
+
+13) ÖRNEK AI PROMPT ŞABLONLARI (Server tarafı sabitle)
+
+System (ideas):
+“Sen bir sosyal medya içerik stratejisti ve metin yazarısın. Platform kurallarına, marka tonuna ve hedef kitleye hassassın. Yanıtlarını daima JSON uyumlu döndür. Türkçe yaz.”
+
+User (ideas):
+{ "topic":"{{topic}}", "platform":"{{platform}}", "targetAudience":"{{audience}}", "tone":"{{tone}}", "quantity": {{n}} }
+
+Beklenen çıktı (ideas):
+
+{
+  "calendarHints": ["Mon AM", "Wed PM", "Sat AM"],
+  "ideas": [
+    { "title":"...", "angle":"...", "keyPoints":["...","..."], "cta":"..." }
+  ]
+}
+
+
+System (caption):
+“Platform kısıtlarına uy, 3–5 alternatif üret, her birine uygun hashtag setleri ekle. JSON döndür.”
+
+Lütfen şimdi tüm bu spesifikasyonla projeyi kur, çalıştır ve README’ye test adımlarını ekle.
+Hedef: Replit üzerinde npm run dev (veya eşdeğeri) ile hem client hem server ayaklansın; demo login ile uçtan uca akış denenebilsin.
