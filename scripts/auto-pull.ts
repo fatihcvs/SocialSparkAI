@@ -65,9 +65,19 @@ class AutoPullManager {
         }
       }
 
-      // Pull updates
-      execSync('git pull origin main', { stdio: 'pipe' });
-      this.log('✅ Successfully pulled autonomous updates from GitHub');
+      // Check if we can pull (Replit restrictions)
+      try {
+        execSync('git pull origin main', { stdio: 'pipe' });
+        this.log('✅ Successfully pulled autonomous updates from GitHub');
+      } catch (gitError: any) {
+        if (gitError.message.includes('Avoid changing .git repository')) {
+          this.log('🚫 Replit git restrictions detected');
+          this.log('💡 MANUAL ACTION REQUIRED: Run "git pull origin main" manually');
+          this.log('📋 Or use the shell to sync with GitHub');
+          return true; // Mark as handled, not failed
+        }
+        throw gitError; // Re-throw other errors
+      }
       
       // Get latest commit info
       const latestCommit = execSync('git log -1 --pretty=format:"%h - %s (%an)"', { encoding: 'utf8' });

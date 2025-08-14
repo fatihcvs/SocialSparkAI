@@ -431,7 +431,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         
         res.json({ token: result.token, url: result.paymentPageUrl });
-      } catch (iyzicoError) {
+      } catch (iyzicoError: any) {
         console.error("İyzico API error, using fallback:", iyzicoError.message);
         
         // Fallback development checkout URL
