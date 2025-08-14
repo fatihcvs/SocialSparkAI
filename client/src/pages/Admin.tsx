@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import AutonomousMonitor from "@/components/AutonomousMonitor";
 
 interface AdminUser {
   id: string;
@@ -105,13 +106,18 @@ export default function Admin() {
   });
 
   return (
-    <Tabs defaultValue="users" className="space-y-4">
+    <Tabs defaultValue="autonomous" className="space-y-4">
       <TabsList>
+        <TabsTrigger value="autonomous">🤖 Autonomous AI</TabsTrigger>
         <TabsTrigger value="users">Kullanıcılar</TabsTrigger>
         <TabsTrigger value="posts">Gönderiler</TabsTrigger>
         <TabsTrigger value="ideas">Fikirler</TabsTrigger>
         <TabsTrigger value="subs">Abonelikler</TabsTrigger>
       </TabsList>
+
+      <TabsContent value="autonomous">
+        <AutonomousMonitor />
+      </TabsContent>
 
       <TabsContent value="users">
         <Card>
