@@ -12,7 +12,7 @@ import Calendar from "@/pages/Calendar";
 import Posts from "@/pages/Posts";
 import AIContent from "@/pages/AIContent";
 import ImageGeneration from "@/pages/ImageGeneration";
-import BufferIntegration from "@/pages/BufferIntegration";
+import ZapierIntegration from "@/pages/ZapierIntegration";
 import SocialPublishing from "@/pages/SocialPublishing";
 import Billing from "@/pages/Billing";
 import Settings from "@/pages/Settings";
@@ -56,7 +56,7 @@ function Router() {
             <Route path="/posts" component={Posts} />
             <Route path="/ai-content" component={AIContent} />
             <Route path="/image-generation" component={ImageGeneration} />
-            <Route path="/buffer-integration" component={BufferIntegration} />
+            <Route path="/zapier-integration" component={ZapierIntegration} />
             <Route path="/social-publishing" component={SocialPublishing} />
             <Route path="/billing" component={Billing} />
             <Route path="/settings" component={Settings} />

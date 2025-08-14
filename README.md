@@ -16,8 +16,7 @@ AI destekli sosyal medya içerik yönetimi ve planlama platformu. İçerik fikir
 - Gönderi durumu takibi (taslak, planlandı, yayınlandı)
 
 ### 🔗 Sosyal Medya Entegrasyonu
-- **Zapier/Make webhook** entegrasyonu (Pro)
-- **Buffer API** entegrasyonu (Fallback)
+  - **Zapier Webhook** entegrasyonu (Pro)
 - Instagram, LinkedIn, Twitter/X, TikTok otomatik paylaşım
 - Multi-platform gönderi yönetimi
 
@@ -39,8 +38,7 @@ AI destekli sosyal medya içerik yönetimi ve planlama platformu. İçerik fikir
 - **Drizzle ORM** + PostgreSQL
 - **JWT** + bcrypt authentication
 - **OpenAI API** (GPT-4o + DALL-E 3)
-- **Zapier/Make Webhooks**
-- **Buffer API** (Fallback)
+  - **Zapier Webhooks**
 - **Stripe** payments
 - **node-cron** scheduler
 
@@ -59,8 +57,7 @@ AI destekli sosyal medya içerik yönetimi ve planlama platformu. İçerik fikir
 - PostgreSQL
 - OpenAI API anahtarı
 - Stripe hesabı (test mode)
-- Zapier/Make hesabı (Pro özellikler için)
-- Buffer hesabı (fallback entegrasyon)
+  - Zapier hesabı (Pro özellikler için)
 
 ### 1. Projeyi Klonlayın
 ```bash
@@ -80,9 +77,7 @@ cp .env.example .env
 - `STRIPE_SECRET_KEY` - Stripe gizli anahtarınız
 - `STRIPE_WEBHOOK_SECRET` - Stripe webhook gizli anahtarınız
 - `STRIPE_PRICE_PRO_MONTH` - Stripe Pro plan fiyat ID'si
-- `ZAPIER_HOOK_URL` - Zapier/Make webhook URL'niz (Pro)
-- `BUFFER_ACCESS_TOKEN` - Buffer API token'ınız (fallback)
-- `BUFFER_PROFILE_ID` - Buffer profil ID'niz (fallback)
+  - `ZAPIER_HOOK_URL` - Zapier webhook URL'niz (Pro)
 - `JWT_SECRET` - Güçlü bir JWT gizli anahtarı (tanımlanmazsa uygulama başlamaz)
 - `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe genel anahtarınız
 
@@ -183,8 +178,8 @@ Sırayla şu testleri yapın ve tümünün çalıştığından emin olun:
     # Gönderileri listele
     curl -H "Authorization: Bearer <token>" https://<url>/api/posts
     
-    # Gönderi durumu sorgula
-    curl -H "Authorization: Bearer <token>" https://<url>/api/buffer/status/<post-id>
+    # Gönderiyi Zapier'e gönder
+    curl -X POST -H "Authorization: Bearer <token>" https://<url>/api/posts/<post-id>/publish
     
     # Dashboard istatistikleri
     curl -H "Authorization: Bearer <token>" https://<url>/api/dashboard/stats
@@ -200,5 +195,4 @@ Sırayla şu testleri yapın ve tümünün çalıştığından emin olun:
 
 ## 📝 Daha Fazla Bilgi
 - OpenAI API limitlerini kontrol edin
-- Buffer API rate limiting: 60 request/minute
 - Stripe webhook gecikmesi: ~1-2 saniye

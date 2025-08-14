@@ -99,7 +99,7 @@ export default function AITools() {
               <div>
                 <p className="text-sm font-medium text-blue-900">Pro Özellikler</p>
                 <p className="text-xs text-blue-700">
-                  Buffer entegrasyonu için Pro plana yükseltin
+                  Zapier entegrasyonu için Pro plana yükseltin
                 </p>
               </div>
             </div>
