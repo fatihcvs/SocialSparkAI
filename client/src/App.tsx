@@ -18,6 +18,7 @@ import Billing from "@/pages/Billing";
 import Settings from "@/pages/Settings";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/not-found";
+import Admin from "@/pages/Admin";
 
 // Layout components
 import Sidebar from "@/components/Sidebar";
@@ -60,6 +61,7 @@ function Router() {
             <Route path="/social-publishing" component={SocialPublishing} />
             <Route path="/billing" component={Billing} />
             <Route path="/settings" component={Settings} />
+            <Route path="/admin" component={Admin} />
             <Route component={NotFound} />
           </Switch>
         </main>

@@ -27,6 +27,8 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
   updateUserPlan(id: string, plan: string): Promise<User>;
+  listUsers(): Promise<User[]>;
+  deleteUser(id: string): Promise<void>;
 
   // Social account operations
   getSocialAccount(userId: string, provider: string): Promise<SocialAccount | undefined>;
@@ -37,10 +39,13 @@ export interface IStorage {
   getContentIdeas(userId: string): Promise<ContentIdea[]>;
   createContentIdea(idea: InsertContentIdea): Promise<ContentIdea>;
   getContentIdea(id: string): Promise<ContentIdea | undefined>;
+  listContentIdeas(): Promise<ContentIdea[]>;
+  deleteContentIdea(id: string): Promise<void>;
 
   // Post asset operations
   getPostAsset(id: string): Promise<PostAsset | undefined>;
   getPostAssets(userId: string, status?: string): Promise<PostAsset[]>;
+  listPostAssets(): Promise<PostAsset[]>;
   createPostAsset(asset: InsertPostAsset): Promise<PostAsset>;
   updatePostAsset(id: string, updates: Partial<PostAsset>): Promise<PostAsset>;
   deletePostAsset(id: string): Promise<void>;
@@ -55,6 +60,8 @@ export interface IStorage {
   getSubscription(userId: string): Promise<Subscription | undefined>;
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
   updateSubscription(id: string, updates: Partial<Subscription>): Promise<Subscription>;
+  listSubscriptions(): Promise<Subscription[]>;
+  deleteSubscription(id: string): Promise<void>;
 
   // API usage tracking
   getApiUsage(userId: string, endpoint: string, since: Date): Promise<number>;
@@ -100,6 +107,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  async listUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
 
   async getSocialAccount(userId: string, provider: string): Promise<SocialAccount | undefined> {
@@ -157,6 +172,14 @@ export class DatabaseStorage implements IStorage {
     return idea;
   }
 
+  async listContentIdeas(): Promise<ContentIdea[]> {
+    return await db.select().from(contentIdeas).orderBy(desc(contentIdeas.createdAt));
+  }
+
+  async deleteContentIdea(id: string): Promise<void> {
+    await db.delete(contentIdeas).where(eq(contentIdeas.id, id));
+  }
+
   async getPostAsset(id: string): Promise<PostAsset | undefined> {
     const [asset] = await db
       .select()
@@ -176,6 +199,10 @@ export class DatabaseStorage implements IStorage {
       .from(postAssets)
       .where(and(...conditions))
       .orderBy(desc(postAssets.createdAt));
+  }
+
+  async listPostAssets(): Promise<PostAsset[]> {
+    return await db.select().from(postAssets).orderBy(desc(postAssets.createdAt));
   }
 
   async createPostAsset(assetData: InsertPostAsset): Promise<PostAsset> {
@@ -274,6 +301,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(subscriptions.id, id))
       .returning();
     return subscription;
+  }
+
+  async listSubscriptions(): Promise<Subscription[]> {
+    return await db.select().from(subscriptions).orderBy(desc(subscriptions.createdAt));
+  }
+
+  async deleteSubscription(id: string): Promise<void> {
+    await db.delete(subscriptions).where(eq(subscriptions.id, id));
   }
 
   async getApiUsage(userId: string, endpoint: string, since: Date): Promise<number> {

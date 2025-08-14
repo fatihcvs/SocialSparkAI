@@ -9,9 +9,10 @@ import {
   FileText, 
   Brain, 
   Image, 
-  Share2, 
-  CreditCard, 
-  Settings 
+  Share2,
+  CreditCard,
+  Settings,
+  Shield
 } from "lucide-react";
 
 const navigation = [
@@ -21,6 +22,7 @@ const navigation = [
   { name: "AI İçerik Üret", href: "/ai-content", icon: Brain },
   { name: "Görsel Oluştur", href: "/image-generation", icon: Image },
   { name: "Zapier Entegrasyonu", href: "/zapier-integration", icon: Share2 },
+  { name: "Admin Paneli", href: "/admin", icon: Shield, admin: true },
 ];
 
 const secondaryNavigation = [
@@ -47,9 +49,10 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="px-4 py-6 space-y-2">
-        {navigation.map((item) => {
-          const isActive = location === item.href;
+        <nav className="px-4 py-6 space-y-2">
+          {navigation.map((item) => {
+            if (item.admin && user?.role !== "admin") return null;
+            const isActive = location === item.href;
           return (
             <Link
               key={item.name}

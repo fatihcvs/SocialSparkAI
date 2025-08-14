@@ -13,14 +13,20 @@ export interface AuthRequest extends Request {
     id: string;
     email: string;
     plan: string;
+    role: string;
   };
 }
 
-export const generateToken = (userId: string, email: string, plan: string): string => {
+export const generateToken = (
+  userId: string,
+  email: string,
+  plan: string,
+  role: string,
+): string => {
   return jwt.sign(
-    { userId, email, plan },
+    { userId, email, plan, role },
     JWT_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: "7d" },
   );
 };
 
@@ -59,6 +65,7 @@ export const authenticateToken = async (
       id: user.id,
       email: user.email,
       plan: user.plan,
+      role: user.role,
     };
 
     next();
@@ -75,16 +82,31 @@ export const requirePlan = (requiredPlan: "pro") => {
       return;
     }
 
-    if (req.user.plan !== requiredPlan && req.user.plan !== "admin") {
-      res.status(403).json({ 
-        error: { 
-          code: "PLAN_REQUIRED", 
-          message: `${requiredPlan} planı gerekli` 
-        } 
+    if (req.user.plan !== requiredPlan && req.user.role !== "admin") {
+      res.status(403).json({
+        error: {
+          code: "PLAN_REQUIRED",
+          message: `${requiredPlan} planı gerekli`
+        }
       });
       return;
     }
 
     next();
   };
+};
+
+export const requireAdmin = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): void => {
+  if (!req.user || req.user.role !== "admin") {
+    res.status(403).json({
+      error: { code: "FORBIDDEN", message: "Yalnızca adminler erişebilir" },
+    });
+    return;
+  }
+
+  next();
 };

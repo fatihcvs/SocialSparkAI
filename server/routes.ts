@@ -7,7 +7,7 @@ import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { insertUserSchema, insertPostAssetSchema } from "@shared/schema";
 import { storage } from "./storage";
-import { authenticateToken, generateToken, hashPassword, verifyPassword, requirePlan } from "./middlewares/auth";
+import { authenticateToken, generateToken, hashPassword, verifyPassword, requirePlan, requireAdmin } from "./middlewares/auth";
 import { rateLimit as apiRateLimit, ipRateLimit } from "./middlewares/rateLimiter";
 import { openaiService } from "./services/openaiService";
 import { contentService } from "./services/contentService";
@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Generate token
-      const token = generateToken(user.id, user.email, user.plan);
+      const token = generateToken(user.id, user.email, user.plan, user.role);
 
       res.json({
         user: {
@@ -80,6 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user.email,
           name: user.name,
           plan: user.plan,
+          role: user.role,
         },
         token,
       });
@@ -123,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate token
-      const token = generateToken(user.id, user.email, user.plan);
+      const token = generateToken(user.id, user.email, user.plan, user.role);
 
       res.json({
         user: {
@@ -131,6 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user.email,
           name: user.name,
           plan: user.plan,
+          role: user.role,
         },
         token,
       });
@@ -162,6 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         name: user.name,
         plan: user.plan,
+        role: user.role,
       });
     } catch (error) {
       console.error("Get user error:", error);
@@ -467,6 +470,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         error: { code: "INTERNAL_ERROR", message: "İçerik fikirleri alınamadı" }
       });
+    }
+  });
+
+  // Admin routes
+  app.get("/api/admin/users", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.listUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("List users error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Kullanıcılar alınamadı" } });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteUser(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete user error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Kullanıcı silinemedi" } });
+    }
+  });
+
+  app.get("/api/admin/posts", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const posts = await storage.listPostAssets();
+      res.json(posts);
+    } catch (error) {
+      console.error("List posts error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Gönderiler alınamadı" } });
+    }
+  });
+
+  app.delete("/api/admin/posts/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      await storage.deletePostAsset(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete post error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Gönderi silinemedi" } });
+    }
+  });
+
+  app.get("/api/admin/ideas", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const ideas = await storage.listContentIdeas();
+      res.json(ideas);
+    } catch (error) {
+      console.error("List ideas error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Fikirler alınamadı" } });
+    }
+  });
+
+  app.delete("/api/admin/ideas/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteContentIdea(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete idea error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Fikir silinemedi" } });
+    }
+  });
+
+  app.get("/api/admin/subscriptions", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const subs = await storage.listSubscriptions();
+      res.json(subs);
+    } catch (error) {
+      console.error("List subscriptions error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Abonelikler alınamadı" } });
+    }
+  });
+
+  app.delete("/api/admin/subscriptions/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteSubscription(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete subscription error:", error);
+      res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Abonelik silinemedi" } });
     }
   });
 

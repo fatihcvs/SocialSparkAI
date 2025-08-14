@@ -3,6 +3,7 @@ export interface User {
   email: string;
   name: string;
   plan: "free" | "pro";
+  role: "user" | "admin";
 }
 
 export interface ContentIdea {
