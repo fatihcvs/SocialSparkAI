@@ -15,6 +15,7 @@ import { iyzicoService } from "./services/iyzicoService";
 import type { AuthRequest } from "./middlewares/auth";
 import integrationRoutes from "./routes/integrations";
 import autonomousRoutes from "./routes/autonomous";
+import autonomousPanelRoutes from "./routes/autonomousPanel";
 import { autonomousScheduler } from "./services/autonomousScheduler";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -569,6 +570,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Abonelik silinemedi" } });
     }
   });
+
+  // Mount route modules
+  app.use('/api/integrations', integrationRoutes);
+  app.use('/api/autonomous', autonomousRoutes);
+  app.use('/api/autonomous-panel', autonomousPanelRoutes);
 
   const httpServer = createServer(app);
   

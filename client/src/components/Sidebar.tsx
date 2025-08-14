@@ -13,7 +13,8 @@ import {
   CreditCard,
   Settings,
   Shield,
-  Activity
+  Activity,
+  Bot
 } from "lucide-react";
 
 const navigation = [
@@ -25,6 +26,7 @@ const navigation = [
   { name: "Zapier Entegrasyonu", href: "/zapier-integration", icon: Share2 },
   { name: "Admin Paneli", href: "/admin", icon: Shield, admin: true },
   { name: "🤖 Live Monitor", href: "/live-monitoring", icon: Activity, admin: true },
+  { name: "🤖 Autonomous AI", href: "/autonomous-panel", icon: Bot, admin: true },
 ];
 
 const secondaryNavigation = [
