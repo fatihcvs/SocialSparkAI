@@ -147,43 +147,83 @@ export class AIAnalyzer {
 
   private async performAIAnalysis(context: SystemContext): Promise<AnalysisResult> {
     const prompt = `
-You are an expert system administrator and full-stack developer analyzing a SocialSparkAI application.
+You are an expert system administrator and full-stack developer analyzing SocialSparkAI - an AI-powered social media content creation and publishing platform.
+
+PLATFORM OVERVIEW:
+SocialSparkAI is a comprehensive social media management platform that:
+- Generates AI-powered content using OpenAI GPT-4o and DALL-E 3 for text and image creation
+- Enables one-click publishing to multiple social media platforms (Instagram, LinkedIn, Twitter/X, TikTok, Facebook) via Zapier webhooks
+- Offers subscription-based pricing with İyzico payment integration for the Turkish market
+- Provides content calendar management, post scheduling, and usage analytics
+- Features a 3-tab content workflow: Ideas → Captions → Images
+- Supports both freemium (with daily limits) and pro subscription models
+
+CORE USER WORKFLOW & BUSINESS LOGIC:
+1. User Registration & Authentication → JWT-based auth with bcrypt password hashing
+2. Plan Selection → Free (daily limits) vs Pro (unlimited) subscription via İyzico payments
+3. AI Content Generation → GPT-4o for captions, DALL-E 3 for images, platform-specific optimization
+4. Content Customization → User editing via intuitive React interface with TailwindCSS/shadcn
+5. Social Publishing → Zapier webhook automation for multi-platform distribution
+6. Analytics & Management → Performance tracking, content calendar, usage monitoring
+
+TECHNICAL ARCHITECTURE:
+- Frontend: React 18 + TypeScript + Vite + TailwindCSS + shadcn/ui components
+- Backend: Node.js + Express + TypeScript + PostgreSQL via Drizzle ORM
+- AI Services: OpenAI GPT-4o & DALL-E 3 integration with structured prompting
+- Payment: İyzico API for Turkish market with subscription management
+- Publishing: Zapier webhook integration for social platform automation
+- Database: 7 tables (users, social_accounts, content_ideas, post_assets, subscriptions, api_usage, sessions)
 
 CURRENT SYSTEM CONTEXT:
 ${JSON.stringify(context, null, 2)}
 
-ANALYZE THE SYSTEM AND PROVIDE:
+ANALYZE THE SYSTEM WITH FOCUS ON:
 
-1. Overall health assessment
-2. Critical issues that need immediate attention
-3. Performance optimization opportunities
-4. Code quality improvements
-5. Security considerations
-6. Specific actionable recommendations
+1. AI Content Generation Pipeline Performance
+   - OpenAI API response times and error handling
+   - Content quality and user satisfaction optimization
+   - Rate limiting and quota management
 
-Focus on:
-- Database performance and optimization
-- API response times and error handling  
-- Memory usage and resource optimization
-- Code quality and maintainability
-- Security vulnerabilities
-- User experience improvements
+2. Social Media Publishing Reliability  
+   - Zapier webhook success rates and failure recovery
+   - Platform-specific content formatting accuracy
+   - Multi-platform posting coordination
+
+3. Payment & Subscription System Security
+   - İyzico integration security and compliance
+   - Subscription lifecycle management accuracy
+   - Payment failure handling and user communication
+
+4. User Experience & Content Workflow
+   - 3-tab content creation flow optimization
+   - Real-time feedback and loading states
+   - Mobile responsiveness and accessibility
+
+5. Performance & Scalability
+   - Database query optimization for content operations
+   - Concurrent user handling during content generation
+   - Memory management during image processing
+
+6. Business Logic Integrity
+   - Plan-based feature access control accuracy
+   - Usage tracking and billing precision
+   - Content ownership and privacy compliance
 
 Provide response in JSON format with this structure:
 {
   "severity": "low|medium|high|critical",
-  "category": "bug|performance|security|enhancement|maintenance", 
-  "summary": "Brief issue summary",
-  "detailedAnalysis": "Detailed technical analysis",
-  "recommendedActions": ["action1", "action2", "action3"],
-  "estimatedImpact": "Impact description",
+  "category": "ai_content|social_publishing|payment|user_workflow|performance|security", 
+  "summary": "Brief issue summary specific to social media content platform",
+  "detailedAnalysis": "Detailed technical analysis in context of SocialSparkAI features",
+  "recommendedActions": ["specific", "actionable", "socialsparkAI-focused", "improvements"],
+  "estimatedImpact": "Impact on content creators and social media workflow efficiency",
   "urgency": 1-10,
   "autoFixable": boolean,
   "codeChanges": [
     {
-      "file": "path/to/file.ts",
-      "changes": "specific code changes needed",
-      "reason": "why this change is needed"
+      "file": "specific/file/path.ts",
+      "changes": "exact code improvements for social media platform",
+      "reason": "business justification related to content creation workflow"
     }
   ]
 }
@@ -223,17 +263,36 @@ Provide response in JSON format with this structure:
 
   async analyzeSpecificIssue(issue: any): Promise<AnalysisResult> {
     const prompt = `
-Analyze this specific system issue and provide detailed recommendations:
+Analyze this specific system issue for SocialSparkAI platform and provide detailed recommendations:
 
 ISSUE DETAILS:
 ${JSON.stringify(issue, null, 2)}
 
-SYSTEM CONTEXT:
-- Application: SocialSparkAI (AI-powered social media content platform)
-- Tech Stack: Node.js, Express, React, TypeScript, PostgreSQL, OpenAI API
-- Features: AI content generation, social media publishing, subscription management
+SOCIALSPARKÁAI PLATFORM CONTEXT:
+- Core Mission: AI-powered social media content creation and automated multi-platform publishing
+- Key Features: GPT-4o content generation, DALL-E 3 image creation, Zapier social publishing, İyzico payments
+- User Journey: Registration → AI Content Generation → Platform Publishing → Analytics Tracking
+- Business Model: Freemium with daily limits → Pro subscription for unlimited content creation
+- Target Users: Content creators, social media managers, small businesses, influencers
+- Critical Success Factors: Content quality, publishing reliability, payment accuracy, user experience
 
-Provide specific analysis and actionable solutions in JSON format.
+TECHNICAL ARCHITECTURE:
+- Frontend: React 18 + TypeScript + Vite + TailwindCSS + shadcn/ui
+- Backend: Node.js + Express + TypeScript + PostgreSQL + Drizzle ORM
+- AI Integration: OpenAI GPT-4o & DALL-E 3 with structured prompting for social media optimization
+- Payment Processing: İyzico API for Turkish market with webhook event handling
+- Social Publishing: Zapier webhook automation for Instagram, LinkedIn, Twitter/X, TikTok, Facebook
+- Authentication: JWT + bcrypt with session management and plan-based access control
+
+ANALYZE WITH FOCUS ON:
+1. How this issue impacts content creators' workflow efficiency
+2. Potential disruption to AI content generation or social publishing pipeline
+3. Effect on subscription revenue and user retention
+4. Security implications for user data and payment processing
+5. Performance impact on concurrent content generation operations
+6. User experience degradation in the 3-tab content creation workflow
+
+Provide specific analysis and actionable solutions optimized for social media content platform in JSON format.
 `;
 
     const response = await openai.chat.completions.create({
