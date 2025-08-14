@@ -77,8 +77,8 @@ export const postAssets = pgTable("post_assets", {
 export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  iyzicoCustomerId: varchar("iyzico_customer_id").notNull(),
-  iyzicoSubscriptionId: varchar("iyzico_subscription_id").notNull(),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
   status: varchar("status").notNull(), // "active" | "canceled" | "past_due"
   currentPeriodEnd: timestamp("current_period_end"),
   createdAt: timestamp("created_at").defaultNow(),
