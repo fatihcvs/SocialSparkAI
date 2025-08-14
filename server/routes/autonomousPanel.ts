@@ -41,7 +41,7 @@ router.get('/config', async (req, res) => {
   try {
     const config = {
       autoFixThreshold: 3, // Default value
-      maxFilesPerFix: 20,
+      maxFilesPerFix: 500, // Updated default to 500
       backupBeforeFix: true,
       testAfterFix: true,
       healthCheckInterval: '*/2 * * * *', // Every 2 minutes

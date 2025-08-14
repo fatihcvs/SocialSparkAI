@@ -441,12 +441,12 @@ export default function AutonomousPanel() {
                       id="maxFilesPerFix"
                       type="number"
                       min="1"
-                      max="50"
+                      max="1000"
                       value={config.maxFilesPerFix || configData?.maxFilesPerFix || 20}
                       onChange={(e) => setConfig(prev => ({ ...prev, maxFilesPerFix: parseInt(e.target.value) }))}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Tek seferde değiştirilebilecek maksimum dosya sayısı
+                      Tek seferde değiştirilebilecek maksimum dosya sayısı (önerilen: 500)
                     </p>
                   </div>
                 </div>
