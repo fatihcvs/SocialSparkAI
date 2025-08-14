@@ -21,7 +21,7 @@ AI destekli sosyal medya içerik yönetimi ve planlama platformu. İçerik fikir
 - Multi-platform gönderi yönetimi
 
 ### 💰 Faturalama Sistemi
-- **Stripe** entegrasyonu
+- **Iyzico** entegrasyonu
 - Free vs Pro plan yönetimi
 - Otomatik faturalandırma
 
@@ -39,7 +39,7 @@ AI destekli sosyal medya içerik yönetimi ve planlama platformu. İçerik fikir
 - **JWT** + bcrypt authentication
 - **OpenAI API** (GPT-4o + DALL-E 3)
   - **Zapier Webhooks**
-- **Stripe** payments
+- **Iyzico** payments
 - **node-cron** scheduler
 
 ### Frontend
@@ -56,7 +56,7 @@ AI destekli sosyal medya içerik yönetimi ve planlama platformu. İçerik fikir
 - Node.js 18+
 - PostgreSQL
 - OpenAI API anahtarı
-- Stripe hesabı (test mode)
+- Iyzico sandbox hesabı
   - Zapier hesabı (Pro özellikler için)
 
 ### 1. Projeyi Klonlayın
@@ -74,12 +74,10 @@ cp .env.example .env
 
 **Replit Secrets'tan doldurmanız gereken anahtarlar:**
 - `OPENAI_API_KEY` - OpenAI API anahtarınız
-- `STRIPE_SECRET_KEY` - Stripe gizli anahtarınız
-- `STRIPE_WEBHOOK_SECRET` - Stripe webhook gizli anahtarınız
-- `STRIPE_PRICE_PRO_MONTH` - Stripe Pro plan fiyat ID'si
-  - `ZAPIER_HOOK_URL` - Zapier webhook URL'niz (Pro)
+- `IYZICO_API_KEY` ve `IYZICO_SECRET_KEY` - Iyzico sandbox API anahtarlarınız
+- `IYZICO_BASE_URL` - Iyzico API URL'i (varsayılan: https://sandbox-api.iyzipay.com)
+- `ZAPIER_HOOK_URL` - Zapier webhook URL'niz (Pro)
 - `JWT_SECRET` - Güçlü bir JWT gizli anahtarı (tanımlanmazsa uygulama başlamaz)
-- `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe genel anahtarınız
 
 ### 3. Projeyi Başlatın
 ```bash
@@ -95,12 +93,8 @@ ZAPIER_HOOK_URL'yi Replit Secrets'a ekleyin:
 4. Replit Secrets'ta `ZAPIER_HOOK_URL` olarak ekleyin
 5. Test için örnek cURL çalıştırın
 
-### 5. Stripe Webhook Test (Geliştirme)
-Stripe webhook'larını test etmek için Stripe CLI kullanın:
-
-```bash
-stripe listen --forward-to https://<replit-url>/api/billing/webhook
-```
+### 5. Iyzico Ödeme Testi (Geliştirme)
+Iyzico ödemelerini test etmek için sandbox API anahtarlarını kullanın ve faturalandırma sayfasından "Pro'ya Yükselt" butonuna tıklayın. Başarılı yönlendirme sonrasında ödeme formu Iyzico tarafından sağlanacaktır.
 
 ## 🧪 Test Rehberi
 
@@ -166,12 +160,12 @@ Sırayla şu testleri yapın ve tümünün çalıştığından emin olun:
    - Zamanlanan bir gönderi oluşturun (5 dakika sonrası)
    - Cron job zamanı geldiğinde status="posted" yapmalı
 
-9. **Stripe Checkout** (Test Kartı)
+9. **Iyzico Checkout** (Test Kartı)
    ```
-   Test Kartı: 4242 4242 4242 4242
-   CVV: 123, Son Kullanma: herhangi bir gelecek tarih
+   Test Kartı: 5526 0800 0000 0006
+   CVV: 000, Son Kullanma: 12/2030
    ```
-   - Checkout tamamlandıktan sonra webhook ile plan="pro" olmalı
+   - Ödeme tamamlandıktan sonra yönlendirme başarılı olmalı
 
 10. **cURL Örnekleri**
     ```bash
@@ -188,11 +182,11 @@ Sırayla şu testleri yapın ve tümünün çalıştığından emin olun:
     curl -H "Authorization: Bearer <token>" https://<url>/api/billing/status
     ```
 
-## 🚀 Stripe Test Kartları
-- **Başarılı Ödeme**: 4242 4242 4242 4242
-- **Başarısız Ödeme**: 4000 0000 0000 0002
-- **3D Secure**: 4000 0000 0000 3220
+## 🚀 Iyzico Test Kartları
+- **Başarılı Ödeme**: 5526 0800 0000 0006
+- **Yetersiz Bakiye**: 5526 0000 0000 0007
+- **3D Secure**: 4766 0000 0000 0004
 
 ## 📝 Daha Fazla Bilgi
 - OpenAI API limitlerini kontrol edin
-- Stripe webhook gecikmesi: ~1-2 saniye
+- Iyzico sandbox işlemleri gerçek ödeme almaz

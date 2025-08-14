@@ -38,10 +38,10 @@ export default function Billing() {
 
   const createCheckoutMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/billing/checkout-session");
+      const response = await apiRequest("POST", "/api/billing/checkout");
       return response.json();
     },
-    onSuccess: (data: { sessionId: string; url: string }) => {
+    onSuccess: (data: { token: string; url: string }) => {
       if (data.url) {
         window.location.href = data.url;
       }

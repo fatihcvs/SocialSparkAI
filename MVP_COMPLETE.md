@@ -72,7 +72,7 @@ curl -X POST "http://localhost:5000/api/auth/register" \
 - [x] Health endpoint
 - [x] Zapier webhook entegrasyonu
 - [x] AI content generation endpoints (OpenAI)
-- [x] Stripe billing integration
+- [x] Iyzico billing integration
 - [x] Rate limiting & security
 - [x] CORS yapılandırması
 - [x] Client-side environment variable usage
@@ -80,8 +80,8 @@ curl -X POST "http://localhost:5000/api/auth/register" \
 ### Deployment için Gerekli Secrets
 ```
 OPENAI_API_KEY=sk-... (AI özellikler için)
-STRIPE_SECRET_KEY=sk_test_... (ödeme için)
-STRIPE_WEBHOOK_SECRET=whsec_... (webhook için)
+IYZICO_API_KEY=sbx-... (ödeme için)
+IYZICO_SECRET_KEY=sbx-... (ödeme için)
 ZAPIER_HOOK_URL=https://hooks.zapier.com/... (sosyal medya için)
 JWT_SECRET=güçlü_random_string
 ```

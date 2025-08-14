@@ -31,8 +31,8 @@ export const users = pgTable("users", {
   name: varchar("name").notNull(),
   role: varchar("role").notNull().default("user"), // "user" | "admin"
   plan: varchar("plan").notNull().default("free"), // "free" | "pro"
-  stripeCustomerId: varchar("stripe_customer_id"),
-  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  iyzicoCustomerId: varchar("iyzico_customer_id"),
+  iyzicoSubscriptionId: varchar("iyzico_subscription_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -79,8 +79,8 @@ export const postAssets = pgTable("post_assets", {
 export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  stripeCustomerId: varchar("stripe_customer_id").notNull(),
-  stripeSubscriptionId: varchar("stripe_subscription_id").notNull(),
+  iyzicoCustomerId: varchar("iyzico_customer_id").notNull(),
+  iyzicoSubscriptionId: varchar("iyzico_subscription_id").notNull(),
   status: varchar("status").notNull(), // "active" | "canceled" | "past_due"
   currentPeriodEnd: timestamp("current_period_end"),
   createdAt: timestamp("created_at").defaultNow(),

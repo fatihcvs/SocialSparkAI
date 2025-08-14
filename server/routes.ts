@@ -11,7 +11,7 @@ import { authenticateToken, generateToken, hashPassword, verifyPassword, require
 import { rateLimit as apiRateLimit, ipRateLimit } from "./middlewares/rateLimiter";
 import { openaiService } from "./services/openaiService";
 import { contentService } from "./services/contentService";
-import { stripeService } from "./services/stripeService";
+import { iyzicoService } from "./services/iyzicoService";
 import type { AuthRequest } from "./middlewares/auth";
 import integrationRoutes from "./routes/integrations";
 
@@ -37,9 +37,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Trust proxy for rate limiting
   app.set("trust proxy", 1);
-
-  // Parse raw body for Stripe webhooks
-  app.use("/api/billing/webhook", express.raw({ type: "application/json" }));
 
   // Auth routes with IP rate limiting
   app.use("/api/auth", ipRateLimit(10, 15)); // 10 requests per 15 minutes per IP
@@ -409,7 +406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Billing routes
-  app.post("/api/billing/checkout-session", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/billing/checkout", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const user = await storage.getUser(req.user!.id);
       if (!user) {
@@ -418,94 +415,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      let customerId = user.stripeCustomerId;
-      
-      // Create Stripe customer if not exists
-      if (!customerId) {
-        const customer = await stripeService.createCustomer(user.email, user.name);
-        customerId = customer.id;
-        
-        await storage.updateUser(user.id, {
-          stripeCustomerId: customerId,
-        });
-      }
-
-      // Create checkout session
-      const priceId = process.env.STRIPE_PRICE_PRO_MONTH;
-      if (!priceId) {
-        throw new Error("STRIPE_PRICE_PRO_MONTH not configured");
-      }
-
-      const session = await stripeService.createCheckoutSession(
-        customerId,
-        priceId,
-        `${req.protocol}://${req.get("host")}/billing?success=true`,
-        `${req.protocol}://${req.get("host")}/billing?canceled=true`
+      const result = await iyzicoService.createCheckoutForm(
+        user.email,
+        user.name,
+        99,
+        `${req.protocol}://${req.get("host")}/billing?success=true`
       );
 
-      res.json({ sessionId: session.id, url: session.url });
+      res.json({ token: result.token, url: result.paymentPageUrl });
     } catch (error) {
       console.error("Create checkout session error:", error);
       res.status(500).json({
-        error: { code: "INTERNAL_ERROR", message: "Ödeme oturumu oluşturulamadı" }
+        error: { code: "INTERNAL_ERROR", message: "Ödeme oluşturulamadı" }
       });
-    }
-  });
-
-  app.post("/api/billing/webhook", async (req, res) => {
-    const sig = req.headers["stripe-signature"] as string;
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    if (!webhookSecret) {
-      console.error("STRIPE_WEBHOOK_SECRET not configured");
-      return res.status(400).send("Webhook secret not configured");
-    }
-
-    try {
-      const event = await stripeService.constructWebhookEvent(
-        req.body,
-        sig,
-        webhookSecret
-      );
-
-      switch (event.type) {
-        case "checkout.session.completed": {
-          const session = event.data.object as any;
-          
-          // Find user by customer ID
-          const users = await storage.getUser(session.customer);
-          // Note: This is simplified - in production you'd query by stripeCustomerId
-          break;
-        }
-
-        case "invoice.payment_succeeded": {
-          const invoice = event.data.object as any;
-          
-          if (invoice.subscription) {
-            // Update user plan to pro
-            // Note: This is simplified - in production you'd query by stripeCustomerId
-            console.log("Payment succeeded for subscription:", invoice.subscription);
-          }
-          break;
-        }
-
-        case "customer.subscription.deleted": {
-          const subscription = event.data.object as any;
-          
-          // Downgrade user to free plan
-          // Note: This is simplified - in production you'd query by stripeCustomerId
-          console.log("Subscription canceled:", subscription.id);
-          break;
-        }
-
-        default:
-          console.log(`Unhandled event type: ${event.type}`);
-      }
-
-      res.json({ received: true });
-    } catch (error) {
-      console.error("Webhook error:", error);
-      res.status(400).send(`Webhook Error: ${error}`);
     }
   });
 
