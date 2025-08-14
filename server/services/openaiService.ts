@@ -96,20 +96,33 @@ Her fikir platform özelliklerine uygun ve hedef kitleye hitap eden olmalı.`;
     tone: string,
     keywords?: string[]
   ): Promise<CaptionVariant[]> {
-    const systemPrompt = `Platform kısıtlarına uy, 3-5 alternatif üret, her birine uygun hashtag setleri ekle. JSON döndür. Türkçe yaz.
+    const systemPrompt = `Sen profesyonel bir sosyal medya içerik yazarısın. Verilen içerik için platform özelliklerine uygun caption varyantları üret.
 
-Platform limitleri:
-- Instagram: 2200 karakter, 5-10 hashtag
-- LinkedIn: 3000 karakter, 1-3 hashtag
-- X: 280 karakter, 1-2 hashtag
-- TikTok: 150 karakter, 3-5 hashtag`;
+MUTLAKA bu JSON formatını kullan:
+{
+  "variants": [
+    {
+      "variant": "Varyant 1",
+      "caption": "Caption metni burada...",
+      "hashtags": ["#hashtag1", "#hashtag2"]
+    }
+  ]
+}
 
-    const userPrompt = JSON.stringify({
-      content: ideaOrRawIdea,
-      platform,
-      tone,
-      keywords: keywords || [],
-    });
+Platform kısıtları:
+- Instagram: 2200 karakter max, 5-10 kaliteli hashtag
+- LinkedIn: 3000 karakter max, 1-3 profesyonel hashtag  
+- X: 280 karakter max, 1-2 hashtag
+- TikTok: 150 karakter max, 3-5 trend hashtag
+
+Her varyant farklı yaklaşım kullanmalı (soru, hikaye, ipucu, vb).`;
+
+    const userPrompt = `Şu içerik için ${platform} platformunda ${tone} tonunda 3 farklı caption varyantı üret:
+
+İçerik: ${ideaOrRawIdea}
+Anahtar kelimeler: ${keywords?.join(", ") || "yok"}
+
+Her varyant platform limitine uygun olmalı ve farklı yaklaşım kullanmalı.`;
 
     try {
       const response = await openai.chat.completions.create({
@@ -122,7 +135,8 @@ Platform limitleri:
         temperature: 0.7,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || "{}");
+      const content = response.choices[0].message.content || "{}";
+      const result = JSON.parse(content);
       return result.variants || [];
     } catch (error) {
       console.error("OpenAI caption generation error:", error);
