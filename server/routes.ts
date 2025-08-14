@@ -1,0 +1,631 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import express from "express";
+import helmet from "helmet";
+import cors from "cors";
+import rateLimit from "express-rate-limit";
+import { z } from "zod";
+import { insertUserSchema, insertPostAssetSchema } from "@shared/schema";
+import { storage } from "./storage";
+import { authenticateToken, generateToken, hashPassword, verifyPassword, requirePlan } from "./middlewares/auth";
+import { rateLimit as apiRateLimit, ipRateLimit } from "./middlewares/rateLimiter";
+import { openaiService } from "./services/openaiService";
+import { contentService } from "./services/contentService";
+import { stripeService } from "./services/stripeService";
+import { bufferService } from "./services/bufferService";
+import { schedulerService } from "./jobs/scheduler";
+import type { AuthRequest } from "./middlewares/auth";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Security middleware
+  app.use(helmet({
+    contentSecurityPolicy: false, // Disable for development
+  }));
+  
+  app.use(cors({
+    origin: process.env.NODE_ENV === "production" 
+      ? ["https://your-domain.com"] // Replace with actual domain
+      : ["http://localhost:5000", "http://127.0.0.1:5000"],
+    credentials: true,
+  }));
+
+  // Global rate limiting
+  app.use("/api", rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: { error: { code: "RATE_LIMIT", message: "Çok fazla istek" } },
+  }));
+
+  // Trust proxy for rate limiting
+  app.set("trust proxy", 1);
+
+  // Parse raw body for Stripe webhooks
+  app.use("/api/billing/webhook", express.raw({ type: "application/json" }));
+
+  // Auth routes with IP rate limiting
+  app.use("/api/auth", ipRateLimit(10, 15)); // 10 requests per 15 minutes per IP
+
+  // Auth - Register
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const registerSchema = insertUserSchema.pick({
+        email: true,
+        name: true,
+      }).extend({
+        password: z.string().min(6, "Şifre en az 6 karakter olmalı"),
+      });
+
+      const { email, password, name } = registerSchema.parse(req.body);
+
+      // Check if user exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({
+          error: { code: "USER_EXISTS", message: "Bu email zaten kayıtlı" }
+        });
+      }
+
+      // Create user
+      const passwordHash = await hashPassword(password);
+      const user = await storage.createUser({
+        email,
+        passwordHash,
+        name,
+        role: "user",
+        plan: "free",
+      });
+
+      // Generate token
+      const token = generateToken(user.id, user.email, user.plan);
+
+      res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          plan: user.plan,
+        },
+        token,
+      });
+    } catch (error) {
+      console.error("Register error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
+        });
+      }
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Kayıt sırasında hata oluştu" }
+      });
+    }
+  });
+
+  // Auth - Login
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const loginSchema = z.object({
+        email: z.string().email("Geçersiz email"),
+        password: z.string().min(1, "Şifre gerekli"),
+      });
+
+      const { email, password } = loginSchema.parse(req.body);
+
+      // Find user
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({
+          error: { code: "INVALID_CREDENTIALS", message: "Geçersiz email veya şifre" }
+        });
+      }
+
+      // Verify password
+      const isValid = await verifyPassword(password, user.passwordHash);
+      if (!isValid) {
+        return res.status(401).json({
+          error: { code: "INVALID_CREDENTIALS", message: "Geçersiz email veya şifre" }
+        });
+      }
+
+      // Generate token
+      const token = generateToken(user.id, user.email, user.plan);
+
+      res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          plan: user.plan,
+        },
+        token,
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
+        });
+      }
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Giriş sırasında hata oluştu" }
+      });
+    }
+  });
+
+  // Auth - Get current user
+  app.get("/api/auth/me", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({
+          error: { code: "USER_NOT_FOUND", message: "Kullanıcı bulunamadı" }
+        });
+      }
+
+      res.json({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        plan: user.plan,
+      });
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Kullanıcı bilgisi alınamadı" }
+      });
+    }
+  });
+
+  // AI routes
+  app.post("/api/ai/generate/ideas", authenticateToken, apiRateLimit("ai_ideas"), async (req: AuthRequest, res) => {
+    try {
+      const schema = z.object({
+        topic: z.string().min(1, "Konu gerekli"),
+        targetAudience: z.string().min(1, "Hedef kitle gerekli"),
+        platform: z.enum(["instagram", "tiktok", "linkedin", "x"]),
+        tone: z.string().min(1, "Ton gerekli"),
+        quantity: z.number().min(1).max(10).default(5),
+      });
+
+      const { topic, targetAudience, platform, tone, quantity } = schema.parse(req.body);
+
+      const contentIdea = await contentService.generateContentIdeas(
+        req.user!.id,
+        topic,
+        targetAudience,
+        platform,
+        tone,
+        quantity
+      );
+
+      res.json(contentIdea);
+    } catch (error) {
+      console.error("Generate ideas error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
+        });
+      }
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "İçerik fikirleri oluşturulamadı" }
+      });
+    }
+  });
+
+  app.post("/api/ai/generate/caption", authenticateToken, apiRateLimit("ai_captions"), async (req: AuthRequest, res) => {
+    try {
+      const schema = z.object({
+        ideaId: z.string().optional(),
+        rawIdea: z.string().optional(),
+        platform: z.enum(["instagram", "linkedin", "x", "tiktok"]),
+        tone: z.string().min(1, "Ton gerekli"),
+        keywords: z.array(z.string()).optional(),
+      }).refine(data => data.ideaId || data.rawIdea, {
+        message: "ideaId veya rawIdea gerekli"
+      });
+
+      const { ideaId, rawIdea, platform, tone, keywords } = schema.parse(req.body);
+
+      let captions;
+      if (ideaId) {
+        captions = await contentService.generatePostCaptions(ideaId, platform, tone, keywords);
+      } else {
+        captions = await openaiService.generateCaptions(rawIdea!, platform, tone, keywords);
+      }
+
+      res.json({ variants: captions });
+    } catch (error) {
+      console.error("Generate caption error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
+        });
+      }
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Caption oluşturulamadı" }
+      });
+    }
+  });
+
+  app.post("/api/ai/generate/image", authenticateToken, apiRateLimit("ai_images"), async (req: AuthRequest, res) => {
+    try {
+      const schema = z.object({
+        prompt: z.string().min(1, "Prompt gerekli"),
+        aspectRatio: z.enum(["1:1", "16:9", "9:16"]).default("1:1"),
+        styleHints: z.string().optional(),
+      });
+
+      const { prompt, aspectRatio, styleHints } = schema.parse(req.body);
+
+      const image = await openaiService.generateImage(prompt, aspectRatio, styleHints);
+
+      res.json(image);
+    } catch (error) {
+      console.error("Generate image error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
+        });
+      }
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Görsel oluşturulamadı" }
+      });
+    }
+  });
+
+  // Posts routes
+  app.get("/api/posts", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const posts = await storage.getPostAssets(req.user!.id, status);
+      res.json(posts);
+    } catch (error) {
+      console.error("Get posts error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Gönderiler alınamadı" }
+      });
+    }
+  });
+
+  app.post("/api/posts", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const schema = insertPostAssetSchema.pick({
+        caption: true,
+        hashtags: true,
+        imageUrl: true,
+        platform: true,
+        ideaId: true,
+      }).extend({
+        scheduledAt: z.string().datetime().optional(),
+      });
+
+      const data = schema.parse(req.body);
+      
+      const post = await storage.createPostAsset({
+        ...data,
+        userId: req.user!.id,
+        scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
+        status: "draft",
+      });
+
+      res.json(post);
+    } catch (error) {
+      console.error("Create post error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
+        });
+      }
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Gönderi oluşturulamadı" }
+      });
+    }
+  });
+
+  app.patch("/api/posts/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const schema = z.object({
+        caption: z.string().optional(),
+        hashtags: z.string().optional(),
+        imageUrl: z.string().optional(),
+        scheduledAt: z.string().datetime().optional(),
+        status: z.enum(["draft", "scheduled", "posted", "failed"]).optional(),
+      });
+
+      const data = schema.parse(req.body);
+      const updates: any = { ...data };
+      
+      if (data.scheduledAt) {
+        updates.scheduledAt = new Date(data.scheduledAt);
+      }
+
+      const post = await storage.updatePostAsset(req.params.id, updates);
+      res.json(post);
+    } catch (error) {
+      console.error("Update post error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
+        });
+      }
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Gönderi güncellenemedi" }
+      });
+    }
+  });
+
+  app.delete("/api/posts/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      await storage.deletePostAsset(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete post error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Gönderi silinemedi" }
+      });
+    }
+  });
+
+  // Dashboard stats
+  app.get("/api/dashboard/stats", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const stats = await storage.getUserStats(req.user!.id);
+      res.json(stats);
+    } catch (error) {
+      console.error("Get stats error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "İstatistikler alınamadı" }
+      });
+    }
+  });
+
+  // Buffer routes (Pro only)
+  app.post("/api/buffer/connect", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
+    try {
+      // For MVP, we'll use environment variables
+      // In production, this would handle OAuth flow
+      res.json({ 
+        message: "Buffer entegrasyonu aktif",
+        profiles: await bufferService.getProfiles()
+      });
+    } catch (error) {
+      console.error("Buffer connect error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Buffer'a bağlanılamadı" }
+      });
+    }
+  });
+
+  app.post("/api/buffer/schedule/:postId", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
+    try {
+      const schema = z.object({
+        scheduledAt: z.string().datetime(),
+      });
+
+      const { scheduledAt } = schema.parse(req.body);
+      
+      const post = await contentService.schedulePost(
+        req.params.postId,
+        new Date(scheduledAt)
+      );
+
+      res.json(post);
+    } catch (error) {
+      console.error("Schedule post error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: { code: "VALIDATION_ERROR", message: error.errors[0].message }
+        });
+      }
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Gönderi planlanamadı" }
+      });
+    }
+  });
+
+  app.post("/api/buffer/publish/:postId", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
+    try {
+      const post = await contentService.publishPostNow(req.params.postId);
+      res.json(post);
+    } catch (error) {
+      console.error("Publish post error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Gönderi yayınlanamadı" }
+      });
+    }
+  });
+
+  app.get("/api/buffer/status/:postId", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const status = await contentService.checkPostStatus(req.params.postId);
+      res.json({ status });
+    } catch (error) {
+      console.error("Get post status error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Gönderi durumu alınamadı" }
+      });
+    }
+  });
+
+  // Export routes
+  app.get("/api/export/csv", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const csv = await contentService.generatePostsCSV(req.user!.id);
+      
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=posts.csv");
+      res.send(csv);
+    } catch (error) {
+      console.error("Export CSV error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "CSV dışa aktarılamadı" }
+      });
+    }
+  });
+
+  // Billing routes
+  app.post("/api/billing/checkout-session", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({
+          error: { code: "USER_NOT_FOUND", message: "Kullanıcı bulunamadı" }
+        });
+      }
+
+      let customerId = user.stripeCustomerId;
+      
+      // Create Stripe customer if not exists
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(user.email, user.name);
+        customerId = customer.id;
+        
+        await storage.updateUser(user.id, {
+          stripeCustomerId: customerId,
+        });
+      }
+
+      // Create checkout session
+      const priceId = process.env.STRIPE_PRICE_PRO_MONTH;
+      if (!priceId) {
+        throw new Error("STRIPE_PRICE_PRO_MONTH not configured");
+      }
+
+      const session = await stripeService.createCheckoutSession(
+        customerId,
+        priceId,
+        `${req.protocol}://${req.get("host")}/billing?success=true`,
+        `${req.protocol}://${req.get("host")}/billing?canceled=true`
+      );
+
+      res.json({ sessionId: session.id, url: session.url });
+    } catch (error) {
+      console.error("Create checkout session error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Ödeme oturumu oluşturulamadı" }
+      });
+    }
+  });
+
+  app.post("/api/billing/webhook", async (req, res) => {
+    const sig = req.headers["stripe-signature"] as string;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error("STRIPE_WEBHOOK_SECRET not configured");
+      return res.status(400).send("Webhook secret not configured");
+    }
+
+    try {
+      const event = await stripeService.constructWebhookEvent(
+        req.body,
+        sig,
+        webhookSecret
+      );
+
+      switch (event.type) {
+        case "checkout.session.completed": {
+          const session = event.data.object as any;
+          
+          // Find user by customer ID
+          const users = await storage.getUser(session.customer);
+          // Note: This is simplified - in production you'd query by stripeCustomerId
+          break;
+        }
+
+        case "invoice.payment_succeeded": {
+          const invoice = event.data.object as any;
+          
+          if (invoice.subscription) {
+            // Update user plan to pro
+            // Note: This is simplified - in production you'd query by stripeCustomerId
+            console.log("Payment succeeded for subscription:", invoice.subscription);
+          }
+          break;
+        }
+
+        case "customer.subscription.deleted": {
+          const subscription = event.data.object as any;
+          
+          // Downgrade user to free plan
+          // Note: This is simplified - in production you'd query by stripeCustomerId
+          console.log("Subscription canceled:", subscription.id);
+          break;
+        }
+
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error("Webhook error:", error);
+      res.status(400).send(`Webhook Error: ${error}`);
+    }
+  });
+
+  app.get("/api/billing/status", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({
+          error: { code: "USER_NOT_FOUND", message: "Kullanıcı bulunamadı" }
+        });
+      }
+
+      const subscription = await storage.getSubscription(user.id);
+
+      res.json({
+        plan: user.plan,
+        subscription: subscription ? {
+          status: subscription.status,
+          currentPeriodEnd: subscription.currentPeriodEnd,
+        } : null,
+      });
+    } catch (error) {
+      console.error("Get billing status error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Fatura durumu alınamadı" }
+      });
+    }
+  });
+
+  // Content ideas routes
+  app.get("/api/content-ideas", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const ideas = await storage.getContentIdeas(req.user!.id);
+      res.json(ideas);
+    } catch (error) {
+      console.error("Get content ideas error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "İçerik fikirleri alınamadı" }
+      });
+    }
+  });
+
+  // Manual scheduler trigger (for testing)
+  app.post("/api/admin/trigger-scheduler", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Only allow admins
+      const user = await storage.getUser(req.user!.id);
+      if (user?.role !== "admin") {
+        return res.status(403).json({
+          error: { code: "FORBIDDEN", message: "Yetki yok" }
+        });
+      }
+
+      await schedulerService.triggerScheduledPosts();
+      res.json({ message: "Scheduler tetiklendi" });
+    } catch (error) {
+      console.error("Trigger scheduler error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "Scheduler tetiklenemedi" }
+      });
+    }
+  });
+
+  // Start the scheduler
+  schedulerService.start();
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
