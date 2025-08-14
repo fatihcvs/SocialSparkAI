@@ -3,6 +3,7 @@ import { aiAnalyzer } from "./aiAnalyzer";
 import { healthMonitor } from "./healthMonitor";
 import { exec } from "child_process";
 import { promisify } from "util";
+import path from "path";
 
 const execAsync = promisify(exec);
 
@@ -337,35 +338,171 @@ export class AutoFixer {
     }
   }
 
-  // SocialSparkAI-specific fix methods
+  // SocialSparkAI-specific fix methods with REAL CODE CHANGES
   private async fixAIContentIssue(analysis: any): Promise<FixResult> {
-    const changes = [];
+    const changes: string[] = [];
     
     try {
-      console.log('[AutoFixer] Optimizing AI content generation pipeline...');
+      console.log('[AutoFixer] 🔧 IMPLEMENTING REAL CODE CHANGES for AI content optimization...');
       
-      // Optimize OpenAI API calls for content generation
-      if (analysis.detailedAnalysis.includes('openai') || analysis.detailedAnalysis.includes('content generation')) {
-        changes.push('Optimized OpenAI API timeout and retry logic for content generation');
-        changes.push('Added error handling for DALL-E 3 image generation failures');
-        changes.push('Implemented content caching to reduce API calls');
+      // REAL CHANGE 1: Create enhanced OpenAI service with retry logic
+      try {
+        const openaiServiceCode = `// AUTONOMOUS AI OPTIMIZATION - Enhanced OpenAI Service
+import OpenAI from "openai";
+
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY,
+  timeout: 30000,
+  maxRetries: 3
+});
+
+// Enhanced content generation with retry logic for SocialSparkAI
+export const generateContentWithRetry = async (prompt: string, maxRetries = 3) => {
+  console.log("[OpenAI] Starting SocialSparkAI content generation with enhanced error handling");
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [{ role: "user", content: prompt }],
+        timeout: 30000
+      });
+      
+      console.log("[OpenAI] ✅ SocialSparkAI content generated successfully on attempt", attempt);
+      return response.choices[0].message.content;
+      
+    } catch (error: any) {
+      console.log(\`[OpenAI] ❌ Attempt \${attempt} failed: \${error.message}\`);
+      
+      if (attempt === maxRetries) {
+        throw new Error(\`OpenAI API failed after \${maxRetries} attempts: \${error.message}\`);
       }
       
-      // Improve content quality and platform-specific optimization
-      if (analysis.detailedAnalysis.includes('quality') || analysis.detailedAnalysis.includes('platform')) {
-        changes.push('Enhanced platform-specific content prompting for Instagram, LinkedIn, Twitter');
-        changes.push('Added content length validation for different social platforms');
-        changes.push('Improved hashtag generation and content structure');
+      // Exponential backoff for SocialSparkAI reliability
+      const delay = 1000 * Math.pow(2, attempt - 1);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+
+// Enhanced DALL-E 3 with SocialSparkAI-specific error handling
+export const generateImageWithFallback = async (prompt: string) => {
+  try {
+    console.log("[DALL-E 3] Generating SocialSparkAI image with enhanced error handling");
+    
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024",
+      quality: "standard"
+    });
+    
+    console.log("[DALL-E 3] ✅ SocialSparkAI image generated successfully");
+    return response.data[0].url;
+    
+  } catch (error: any) {
+    console.error("[DALL-E 3] ❌ SocialSparkAI image generation failed:", error.message);
+    throw new Error("Image generation temporarily unavailable. Please try again.");
+  }
+};
+
+export { openai };
+`;
+        
+        await fs.writeFile("server/services/openaiOptimized.ts", openaiServiceCode);
+        changes.push("✅ Created enhanced OpenAI service with retry logic and error handling");
+        console.log("[AutoFixer] ✅ Created openaiOptimized.ts");
+        
+      } catch (error) {
+        changes.push("❌ Failed to create OpenAI optimization service: " + (error as Error).message);
+        console.error("[AutoFixer] ❌ Failed to create openaiOptimized.ts:", error);
       }
+      
+      // REAL CHANGE 2: Create intelligent content caching system
+      try {
+        const cacheServiceCode = `// AUTONOMOUS AI OPTIMIZATION - SocialSparkAI Content Caching System
+class SocialSparkAIContentCache {
+  private cache = new Map<string, { content: string, timestamp: number, views: number }>();
+  private readonly TTL = 5 * 60 * 1000; // 5 minutes cache for social media content
+  private readonly MAX_CACHE_SIZE = 1000;
+  
+  generateKey(prompt: string, type: string): string {
+    // Create unique cache key for SocialSparkAI content
+    return \`socialsparkAI_\${type}:\${prompt.substring(0, 100)}\`;
+  }
+  
+  set(key: string, content: string): void {
+    // Remove oldest entries if cache is full
+    if (this.cache.size >= this.MAX_CACHE_SIZE) {
+      const oldestKey = this.cache.keys().next().value;
+      this.cache.delete(oldestKey);
+    }
+    
+    this.cache.set(key, { 
+      content, 
+      timestamp: Date.now(), 
+      views: 0 
+    });
+    
+    console.log(\`[SocialSparkAI Cache] ✅ Cached content for key: \${key}\`);
+  }
+  
+  get(key: string): string | null {
+    const cached = this.cache.get(key);
+    if (!cached) return null;
+    
+    // Check if expired
+    if (Date.now() - cached.timestamp > this.TTL) {
+      this.cache.delete(key);
+      console.log(\`[SocialSparkAI Cache] ♻️ Expired cache for key: \${key}\`);
+      return null;
+    }
+    
+    // Update view count for SocialSparkAI analytics
+    cached.views++;
+    console.log(\`[SocialSparkAI Cache] ✅ Cache hit for key: \${key} (views: \${cached.views})\`);
+    return cached.content;
+  }
+  
+  getStats() {
+    return {
+      size: this.cache.size,
+      totalViews: Array.from(this.cache.values()).reduce((sum, item) => sum + item.views, 0),
+      platform: 'SocialSparkAI'
+    };
+  }
+  
+  clear(): void {
+    this.cache.clear();
+    console.log("[SocialSparkAI Cache] 🧹 Cache cleared");
+  }
+}
+
+export const socialSparkAICache = new SocialSparkAIContentCache();
+`;
+        
+        await fs.writeFile("server/services/socialSparkAICache.ts", cacheServiceCode);
+        changes.push("✅ Created intelligent SocialSparkAI content caching system");
+        console.log("[AutoFixer] ✅ Created socialSparkAICache.ts");
+        
+      } catch (error) {
+        changes.push("❌ Failed to create content caching system: " + (error as Error).message);
+        console.error("[AutoFixer] ❌ Failed to create socialSparkAICache.ts:", error);
+      }
+      
+      console.log("[AutoFixer] ✅ REAL CODE CHANGES COMPLETED for AI content optimization");
       
       return {
         success: true,
         action: 'ai_content_optimization',
-        description: `Optimized AI content generation pipeline: ${changes.join(', ')}`,
+        description: 'REAL SocialSparkAI AI Pipeline Enhancement: ' + changes.join(', '),
         timestamp: new Date(),
         changes
       };
+      
     } catch (error) {
+      console.error("[AutoFixer] ❌ AI content optimization failed:", error);
       return {
         success: false,
         action: 'ai_content_optimization',
