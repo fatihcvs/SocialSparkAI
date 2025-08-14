@@ -31,8 +31,6 @@ export const users = pgTable("users", {
   name: varchar("name").notNull(),
   role: varchar("role").notNull().default("user"), // "user" | "admin"
   plan: varchar("plan").notNull().default("free"), // "free" | "pro"
-  iyzicoCustomerId: varchar("iyzico_customer_id"),
-  iyzicoSubscriptionId: varchar("iyzico_subscription_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
