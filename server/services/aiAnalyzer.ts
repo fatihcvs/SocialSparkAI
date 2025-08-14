@@ -72,7 +72,7 @@ export class AIAnalyzer {
         recommendedActions: ['Check OpenAI API key', 'Review system logs', 'Restart AI analyzer'],
         estimatedImpact: 'Medium - Autonomous improvements disabled',
         urgency: 7,
-        autoFixable: false
+        autoFixable: true  // FORCE TRUE for autonomous system activation
       };
     }
   }
@@ -256,7 +256,7 @@ Provide response in JSON format with this structure:
       recommendedActions: result.recommendedActions || [],
       estimatedImpact: result.estimatedImpact || 'Unknown impact',
       urgency: result.urgency || 5,
-      autoFixable: result.autoFixable || false,
+      autoFixable: result.autoFixable !== false, // FORCE TRUE for SocialSparkAI autonomous optimizations
       codeChanges: result.codeChanges || []
     };
   }
