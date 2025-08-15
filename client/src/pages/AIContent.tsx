@@ -1,22 +1,44 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
-import { Brain, Sparkles, Copy, Clock, Lightbulb, Send, Image } from "lucide-react";
+import { 
+  Brain, 
+  Sparkles, 
+  PenTool, 
+  ImageIcon, 
+  RefreshCw, 
+  Save,
+  Send,
+  Crown,
+  Lightbulb,
+  Target,
+  Zap,
+  CheckCircle,
+  XCircle,
+  Clock,
+  TrendingUp,
+  Users,
+  Globe
+} from "lucide-react";
 import CaptionGenerator from "@/components/CaptionGenerator";
 import type { ContentIdea, CaptionVariant } from "@/types";
 
 export default function AIContent() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"ideas" | "captions" | "images">("ideas");
-  
+
   // Ideas form state
   const [ideasForm, setIdeasForm] = useState({
     topic: "",
@@ -53,6 +75,10 @@ export default function AIContent() {
   const generateIdeasMutation = useMutation({
     mutationFn: async (data: typeof ideasForm) => {
       const response = await apiRequest("POST", "/api/ai/generate/ideas", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "İçerik fikri oluşturulamadı");
+      }
       return response.json();
     },
     onSuccess: (data: ContentIdea) => {
@@ -62,10 +88,10 @@ export default function AIContent() {
         description: "İçerik fikirleri oluşturuldu!",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Hata",
-        description: error.message,
+        description: error.message || "Bilinmeyen bir hata oluştu.",
         variant: "destructive",
       });
     },
@@ -78,6 +104,10 @@ export default function AIContent() {
         ...data,
         keywords,
       });
+       if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Caption oluşturulamadı");
+      }
       return response.json();
     },
     onSuccess: (data: { variants: CaptionVariant[] }) => {
@@ -87,10 +117,10 @@ export default function AIContent() {
         description: "Caption varyantları oluşturuldu!",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Hata",
-        description: error.message,
+        description: error.message || "Bilinmeyen bir hata oluştu.",
         variant: "destructive",
       });
     },
@@ -99,6 +129,10 @@ export default function AIContent() {
   const generateImageMutation = useMutation({
     mutationFn: async (data: typeof imageForm) => {
       const response = await apiRequest("POST", "/api/ai/generate/image", data);
+       if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Görsel oluşturulamadı");
+      }
       return response.json();
     },
     onSuccess: (data: { url: string }) => {
@@ -108,10 +142,10 @@ export default function AIContent() {
         description: "Görsel oluşturuldu!",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Hata",
-        description: error.message,
+        description: error.message || "Bilinmeyen bir hata oluştu.",
         variant: "destructive",
       });
     },
@@ -122,7 +156,7 @@ export default function AIContent() {
     if (!ideasForm.topic || !ideasForm.targetAudience || !ideasForm.platform || !ideasForm.tone) {
       toast({
         title: "Hata",
-        description: "Lütfen tüm alanları doldurun",
+        description: "Lütfen tüm gerekli alanları doldurun",
         variant: "destructive",
       });
       return;
@@ -170,7 +204,7 @@ export default function AIContent() {
       ...captionForm,
       rawIdea: `${ideaTitle}: ${ideaAngle}`,
     });
-    
+
     toast({
       title: "Hazırlandı",
       description: "Caption üretimi için form dolduruldu",
@@ -248,7 +282,7 @@ export default function AIContent() {
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
                 İçerik Fikirleri Oluştur
               </h2>
-              
+
               <form onSubmit={handleGenerateIdeas} className="space-y-4">
                 <div>
                   <Label htmlFor="topic">Konu</Label>
@@ -263,7 +297,7 @@ export default function AIContent() {
 
                 <div>
                   <Label htmlFor="audience">Hedef Kitle</Label>
-                  <Select onValueChange={(value) => setIdeasForm({ ...ideasForm, targetAudience: value })}>
+                  <Select onValueChange={(value) => setIdeasForm({ ...ideasForm, targetAudience: value })} defaultValue={ideasForm.targetAudience}>
                     <SelectTrigger data-testid="select-ideas-audience">
                       <SelectValue placeholder="Hedef kitle seçin" />
                     </SelectTrigger>
@@ -279,7 +313,7 @@ export default function AIContent() {
 
                 <div>
                   <Label htmlFor="platform">Platform</Label>
-                  <Select onValueChange={(value) => setIdeasForm({ ...ideasForm, platform: value })}>
+                  <Select onValueChange={(value) => setIdeasForm({ ...ideasForm, platform: value })} defaultValue={ideasForm.platform}>
                     <SelectTrigger data-testid="select-ideas-platform">
                       <SelectValue placeholder="Platform seçin" />
                     </SelectTrigger>
@@ -294,7 +328,7 @@ export default function AIContent() {
 
                 <div>
                   <Label htmlFor="tone">Ton</Label>
-                  <Select onValueChange={(value) => setIdeasForm({ ...ideasForm, tone: value })}>
+                  <Select onValueChange={(value) => setIdeasForm({ ...ideasForm, tone: value })} defaultValue={ideasForm.tone}>
                     <SelectTrigger data-testid="select-ideas-tone">
                       <SelectValue placeholder="Ton seçin" />
                     </SelectTrigger>
@@ -310,7 +344,7 @@ export default function AIContent() {
 
                 <div>
                   <Label htmlFor="quantity">Fikir Sayısı</Label>
-                  <Select onValueChange={(value) => setIdeasForm({ ...ideasForm, quantity: parseInt(value) })}>
+                  <Select onValueChange={(value) => setIdeasForm({ ...ideasForm, quantity: parseInt(value) })} defaultValue={String(ideasForm.quantity)}>
                     <SelectTrigger data-testid="select-ideas-quantity">
                       <SelectValue placeholder="Fikir sayısı" />
                     </SelectTrigger>
@@ -329,8 +363,17 @@ export default function AIContent() {
                   disabled={generateIdeasMutation.isPending}
                   data-testid="button-generate-ideas"
                 >
-                  <Brain className="w-4 h-4 mr-2" />
-                  {generateIdeasMutation.isPending ? "Oluşturuluyor..." : "Fikirler Oluştur"}
+                  {generateIdeasMutation.isPending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Oluşturuluyor...
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="w-4 h-4 mr-2" />
+                      Fikirler Oluştur
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -343,7 +386,12 @@ export default function AIContent() {
                 Oluşturulan Fikirler
               </h2>
 
-              {generatedIdeas ? (
+              {generateIdeasMutation.isError ? (
+                <Alert variant="destructive">
+                  <XCircle className="h-4 w-4" />
+                  <AlertDescription>{(generateIdeasMutation.error as any).message}</AlertDescription>
+                </Alert>
+              ) : generatedIdeas ? (
                 <div className="space-y-6">
                   {/* Calendar Hints */}
                   <div>
@@ -431,7 +479,7 @@ export default function AIContent() {
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
                 Caption Varyantları Oluştur
               </h2>
-              
+
               <form onSubmit={handleGenerateCaptions} className="space-y-4">
                 <div>
                   <Label htmlFor="rawIdea">İçerik Konusu</Label>
@@ -447,7 +495,7 @@ export default function AIContent() {
 
                 <div>
                   <Label htmlFor="platform">Platform</Label>
-                  <Select onValueChange={(value) => setCaptionForm({ ...captionForm, platform: value })}>
+                  <Select onValueChange={(value) => setCaptionForm({ ...captionForm, platform: value })} defaultValue={captionForm.platform}>
                     <SelectTrigger data-testid="select-caption-platform">
                       <SelectValue placeholder="Platform seçin" />
                     </SelectTrigger>
@@ -462,7 +510,7 @@ export default function AIContent() {
 
                 <div>
                   <Label htmlFor="tone">Ton</Label>
-                  <Select onValueChange={(value) => setCaptionForm({ ...captionForm, tone: value })}>
+                  <Select onValueChange={(value) => setCaptionForm({ ...captionForm, tone: value })} defaultValue={captionForm.tone}>
                     <SelectTrigger data-testid="select-caption-tone">
                       <SelectValue placeholder="Ton seçin" />
                     </SelectTrigger>
@@ -492,8 +540,17 @@ export default function AIContent() {
                   disabled={generateCaptionsMutation.isPending}
                   data-testid="button-generate-captions"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {generateCaptionsMutation.isPending ? "Oluşturuluyor..." : "Caption Varyantları Oluştur"}
+                  {generateCaptionsMutation.isPending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Oluşturuluyor...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Caption Varyantları Oluştur
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -506,7 +563,12 @@ export default function AIContent() {
                 Caption Varyantları
               </h2>
 
-              {generatedCaptions.length > 0 ? (
+              {generateCaptionsMutation.isError ? (
+                <Alert variant="destructive">
+                  <XCircle className="h-4 w-4" />
+                  <AlertDescription>{(generateCaptionsMutation.error as any).message}</AlertDescription>
+                </Alert>
+              ) : generatedCaptions.length > 0 ? (
                 <div className="space-y-4">
                   {generatedCaptions.map((variant, index) => (
                     <div key={index} className="border border-slate-200 rounded-lg p-4">
@@ -547,7 +609,6 @@ export default function AIContent() {
                           <Button
                             size="sm"
                             onClick={() => {
-                              // Pre-fill post data and navigate
                               const postData = {
                                 caption: `${variant.caption}\n\n${variant.hashtags.join(' ')}`,
                                 imageUrl: "",
@@ -590,7 +651,7 @@ export default function AIContent() {
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
                 AI Görsel Oluştur
               </h2>
-              
+
               <form onSubmit={handleGenerateImage} className="space-y-4">
                 <div>
                   <Label htmlFor="prompt">Görsel Açıklaması</Label>
@@ -606,7 +667,7 @@ export default function AIContent() {
 
                 <div>
                   <Label htmlFor="aspectRatio">En-Boy Oranı</Label>
-                  <Select onValueChange={(value) => setImageForm({ ...imageForm, aspectRatio: value as "1:1" | "16:9" | "9:16" })}>
+                  <Select onValueChange={(value) => setImageForm({ ...imageForm, aspectRatio: value as "1:1" | "16:9" | "9:16" })} defaultValue={imageForm.aspectRatio}>
                     <SelectTrigger data-testid="select-image-aspect-ratio">
                       <SelectValue placeholder="En-boy oranı seçin" />
                     </SelectTrigger>
@@ -635,8 +696,17 @@ export default function AIContent() {
                   disabled={generateImageMutation.isPending}
                   data-testid="button-generate-image"
                 >
-                  <Image className="w-4 h-4 mr-2" />
-                  {generateImageMutation.isPending ? "Oluşturuluyor..." : "Görsel Oluştur"}
+                  {generateImageMutation.isPending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Oluşturuluyor...
+                    </>
+                  ) : (
+                    <>
+                      <Image className="w-4 h-4 mr-2" />
+                      Görsel Oluştur
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -649,7 +719,12 @@ export default function AIContent() {
                 Oluşturulan Görsel
               </h2>
 
-              {generatedImage ? (
+              {generateImageMutation.isError ? (
+                <Alert variant="destructive">
+                  <XCircle className="h-4 w-4" />
+                  <AlertDescription>{(generateImageMutation.error as any).message}</AlertDescription>
+                </Alert>
+              ) : generatedImage ? (
                 <div className="space-y-4">
                   <div className="relative bg-slate-50 rounded-lg overflow-hidden">
                     <img
@@ -677,7 +752,7 @@ export default function AIContent() {
                           platform: "",
                           scheduledAt: "",
                         };
-                        localStorage.setItem('pendingPost', JSON.stringify(postData));
+                        localStorage.setItem('pendingPost', JSON.JSON.stringify(postData));
                         window.open('/social-publishing', '_blank');
                       }}
                       className="flex-1"

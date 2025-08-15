@@ -34,28 +34,48 @@ export class OpenAIService {
     tone: string,
     quantity: number = 5
   ): Promise<IdeasResponse> {
-    const systemPrompt = `Sen profesyonel bir sosyal medya içerik stratejistisin. Verilen konu için yaratıcı ve etkileşimli içerik fikirleri üret.
+    const systemPrompt = `Sen dünya çapında tanınan bir Türk sosyal medya stratejist ve içerik uzmanısın. Amacın verilen konuya göre viral olma potansiyeli yüksek, etkileşimli içerik fikirleri üretmek.
 
-MUTLAKA bu JSON formatını kullan:
+ZORUNLU JSON FORMATI - Bu formattan kesinlikle sapma:
 {
   "ideas": [
     {
-      "title": "İçerik başlığı",
-      "angle": "İçeriğin yaklaşımı",
-      "keyPoints": ["Ana nokta 1", "Ana nokta 2", "Ana nokta 3"],
-      "cta": "Çağrı metni"
+      "title": "Çekici ve merak uyandıran başlık",
+      "angle": "Benzersiz yaklaşım açısı", 
+      "keyPoints": ["Dikkat çekici nokta 1", "Değer katacak nokta 2", "Aksiyon tetikleyici nokta 3"],
+      "cta": "Güçlü çağrı metni"
     }
   ],
-  "calendarHints": ["Pazartesi Sabah", "Çarşamba Öğlen", "Cuma Akşam"]
+  "calendarHints": ["En iyi paylaşım zamanları"]
 }
 
-Platform odaklı yaklaşımlar:
-- Instagram: Görsel odaklı, hikaye anlatımı, engagement
-- LinkedIn: Profesyonel değer, bilgi paylaşımı, network
-- X: Kısa ve etkili, gündem, viral potansiyel  
-- TikTok: Trend odaklı, eğlenceli, genç hedef kitle
+PLATFORM SPESİFİK OPTİMİZASYON KURALLARI:
 
-Her fikir SEÇİLEN PLATFORM için optimize edilmeli.`;
+🔹 INSTAGRAM (Instagram):
+- Görsel hikaye anlatımı odaklı
+- Hashtag stratejisi dahil et
+- Stories, Reels, Post formatları için uygun
+- Estetik ve lifestyle odaklı yaklaşım
+
+🔹 LINKEDIN (LinkedIn): 
+- Profesyonel değer ve expertise gösterimi
+- B2B odaklı içerik stratejisi
+- Thought leadership yaklaşımı
+- İş dünyası trendleri ve insights
+
+🔹 TWITTER/X (x):
+- Kısa, vurucu ve viral potansiyeli yüksek
+- Güncel konular ve trending topics
+- Thread formatı için uygun
+- Hızlı etkileşim odaklı
+
+🔹 TIKTOK (tiktok):
+- Gen Z odaklı eğlenceli içerik
+- Trend challenges ve viral formatlar  
+- Kısa format video için optimize
+- Müzik ve efekt önerileri dahil
+
+Her fikir mutlaka SEÇİLEN PLATFORM için özelleştirilmeli ve Türk kitleye hitap etmeli.`;
 
     const userPrompt = `Şu bilgilere göre ${quantity} adet içerik fikri üret:
 
@@ -96,26 +116,52 @@ Her fikir platform özelliklerine uygun ve hedef kitleye hitap eden olmalı.`;
     tone: string,
     keywords?: string[]
   ): Promise<CaptionVariant[]> {
-    const systemPrompt = `Sen profesyonel bir sosyal medya içerik yazarısın. Verilen içerik için platform özelliklerine uygun caption varyantları üret.
+    const systemPrompt = `Sen Türkiye'nin en başarılı sosyal medya copywriter'ısın. Görevin verilen fikre göre viral olma potansiyeli yüksek, etkileşimli caption varyantları yazmak.
 
-MUTLAKA bu JSON formatını kullan:
+ZORUNLU JSON FORMATI:
 {
   "variants": [
     {
-      "variant": "Varyant 1",
-      "caption": "Caption metni burada...",
-      "hashtags": ["#hashtag1", "#hashtag2"]
+      "variant": "Varyant Adı (örn: Soru Temelli)",
+      "caption": "Tam caption metni emoji ve formatla",
+      "hashtags": ["#relevanthashtag1", "#relevanthashtag2"]
     }
   ]
 }
 
-Platform kısıtları:
-- Instagram: 2200 karakter max, 5-10 kaliteli hashtag
-- LinkedIn: 3000 karakter max, 1-3 profesyonel hashtag  
-- X: 280 karakter max, 1-2 hashtag
-- TikTok: 150 karakter max, 3-5 trend hashtag
+PLATFORM KURALLARI VE LİMİTLER:
 
-Her varyant farklı yaklaşım kullanmalı (soru, hikaye, ipucu, vb).`;
+📸 INSTAGRAM (instagram):
+- LIMIT: 2200 karakter
+- HASHTAG: 5-15 arası kaliteli, niche hashtag
+- FORMAT: Emoji kullan, paragraf ara boşlukları, hikaye anlatımı
+- YAKLAŞIM: Görsel odaklı, lifestyle, estetik
+
+💼 LINKEDIN (linkedin):
+- LIMIT: 3000 karakter  
+- HASHTAG: 1-5 profesyonel hashtag
+- FORMAT: Profesyonel ton, değer odaklı, thought leadership
+- YAKLAŞIM: İş dünyası insights, career tips, industry knowledge
+
+🐦 TWITTER/X (x):
+- LIMIT: 280 karakter (SIKT!)
+- HASHTAG: 1-3 trending hashtag
+- FORMAT: Kısa, vurucu, viral potansiyel
+- YAKLAŞIM: Güncel, tartışma başlatıcı, thread teaser
+
+🎵 TIKTOK (tiktok):
+- LIMIT: 150 karakter
+- HASHTAG: 3-8 trend hashtag (#fyp #keşfet dahil)
+- FORMAT: Gen Z dili, eğlenceli, challenge odaklı
+- YAKLAŞIM: Viral trends, müzik referansları
+
+HER VARYANT FARKLI YAKLAȘIM KULLANMALI:
+1. Soru temelli (merak uyandırıcı)
+2. Hikaye anlatımı (duygusal bağ)
+3. Liste/İpucu formatı (değer odaklı)
+4. Challenge/Aksiyon tetikleyici
+
+Türk kültürüne ve diline uygun, güncel slang ve trend referanslar kullan.`;
 
     const userPrompt = `Şu içerik için ${platform} platformunda ${tone} tonunda 3 farklı caption varyantı üret:
 
