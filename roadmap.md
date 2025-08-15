@@ -2,8 +2,8 @@
 
 ## Phase 1: Foundation & Infrastructure
 - [x] Add health check endpoint for API monitoring
-- [ ] Document environment setup (.env requirements)
-- [ ] Establish CI type-check script
+- [x] Document environment setup (.env requirements)
+- [x] Establish CI type-check script
 
 ## Phase 2: AI Content Engine
 - [ ] Finalize OpenAI service integration for idea/caption/image generation
