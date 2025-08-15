@@ -32,7 +32,6 @@ export default function Dashboard() {
     <div className="space-y-8">
       {/* GitHub Sync Notification */}
       <div className="mb-6">
-        <GitHubSyncNotification />
       </div>
 
       {/* Quick Stats */}
