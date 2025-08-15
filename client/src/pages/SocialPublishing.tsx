@@ -276,11 +276,55 @@ export default function SocialPublishing() {
                 data-testid="textarea-caption"
               />
               <div className="text-xs text-slate-500 mt-1">
-                {testPost.platform === 'instagram' && '💡 Instagram: 2,200 karakter limite dikkat edin. #hashtag kullanımını önerilir'}
-                {testPost.platform === 'linkedin' && '💡 LinkedIn: 3,000 karakter limit. Profesyonel ton kullanın'}
-                {testPost.platform === 'x' && '💡 Twitter/X: 280 karakter limit. Kısa ve net mesajlar'}
-                {testPost.platform === 'tiktok' && '💡 TikTok: Trend hashtag\u0027leri ve emoji kullanın'}
-                {!testPost.platform && '💡 Platform seçtikten sonra özel rehberlik göreceksiniz'}
+                {testPost.platform === 'instagram' && (
+                  <div className="bg-pink-50 p-2 rounded-lg border border-pink-200">
+                    <strong>📸 Instagram İpuçları:</strong>
+                    <ul className="list-disc ml-4 mt-1">
+                      <li>2,200 karakter limit</li>
+                      <li>5-15 arası hashtag kullanın</li>
+                      <li>Görsel odaklı hikaye anlatın</li>
+                      <li>Emoji ve satır araları kullanın</li>
+                    </ul>
+                  </div>
+                )}
+                {testPost.platform === 'linkedin' && (
+                  <div className="bg-blue-50 p-2 rounded-lg border border-blue-200">
+                    <strong>💼 LinkedIn İpuçları:</strong>
+                    <ul className="list-disc ml-4 mt-1">
+                      <li>3,000 karakter limit</li>
+                      <li>Profesyonel ton kullanın</li>
+                      <li>Değer odaklı içerik paylaşın</li>
+                      <li>1-5 profesyonel hashtag</li>
+                    </ul>
+                  </div>
+                )}
+                {testPost.platform === 'x' && (
+                  <div className="bg-sky-50 p-2 rounded-lg border border-sky-200">
+                    <strong>🐦 Twitter/X İpuçları:</strong>
+                    <ul className="list-disc ml-4 mt-1">
+                      <li>280 karakter limit (sıkı!)</li>
+                      <li>Kısa ve vurucu mesajlar</li>
+                      <li>Güncel konulara odaklanın</li>
+                      <li>1-3 trend hashtag</li>
+                    </ul>
+                  </div>
+                )}
+                {testPost.platform === 'tiktok' && (
+                  <div className="bg-purple-50 p-2 rounded-lg border border-purple-200">
+                    <strong>🎵 TikTok İpuçları:</strong>
+                    <ul className="list-disc ml-4 mt-1">
+                      <li>150 karakter limit</li>
+                      <li>Gen Z diline uygun olun</li>
+                      <li>Trend müzik ve efektler</li>
+                      <li>3-8 viral hashtag (#fyp #keşfet)</li>
+                    </ul>
+                  </div>
+                )}
+                {!testPost.platform && (
+                  <div className="bg-gray-50 p-2 rounded-lg border border-gray-200">
+                    💡 Platform seçtikten sonra özel rehberlik göreceksiniz
+                  </div>
+                )}
               </div>
             </div>
 

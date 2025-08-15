@@ -14,15 +14,13 @@ import { contentService } from "./services/contentService";
 import { iyzicoService } from "./services/iyzicoService";
 import type { AuthRequest } from "./middlewares/auth";
 import integrationRoutes from "./routes/integrations";
-import autonomousRoutes from "./routes/autonomous";
-import { autonomousScheduler } from "./services/autonomousScheduler";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Security middleware
   app.use(helmet({
     contentSecurityPolicy: false, // Disable for development
   }));
-  
+
   app.use(cors({
     origin:
       process.env.NODE_ENV === "production"
@@ -301,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const data = schema.parse(req.body);
-      
+
       const post = await storage.createPostAsset({
         ...data,
         userId: req.user!.id,
@@ -335,7 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const data = schema.parse(req.body);
       const updates: any = { ...data };
-      
+
       if (data.scheduledAt) {
         updates.scheduledAt = new Date(data.scheduledAt);
       }
@@ -382,7 +380,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Integration routes (Zapier/Make webhook)
   app.use("/api/integrations", integrationRoutes);
-  app.use("/api/autonomous", autonomousRoutes);
 
   app.post("/api/posts/:postId/publish", authenticateToken, requirePlan("pro"), async (req: AuthRequest, res) => {
     try {
@@ -400,7 +397,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/export/csv", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const csv = await contentService.generatePostsCSV(req.user!.id);
-      
+
       res.setHeader("Content-Type", "text/csv");
       res.setHeader("Content-Disposition", "attachment; filename=posts.csv");
       res.send(csv);
@@ -429,14 +426,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           99,
           `${req.protocol}://${req.get("host")}/billing?payment_status=success&plan=pro`
         );
-        
+
         res.json({ token: result.token, url: result.paymentPageUrl });
       } catch (iyzicoError: any) {
         console.error("İyzico API error, using fallback:", iyzicoError.message);
-        
+
         // Fallback development checkout URL
         const fallbackUrl = `${req.protocol}://${req.get("host")}/billing?payment_status=success&plan=pro&source=fallback`;
-        
+
         res.json({
           token: "dev-checkout-session",
           url: fallbackUrl
@@ -570,18 +567,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mount route modules
+  app.use('/api/integrations', integrationRoutes);
+
   const httpServer = createServer(app);
-  
-  // Initialize autonomous system after server creation
-  setTimeout(async () => {
-    console.log("[Server] 🤖 Initializing Autonomous Maintenance System...");
-    try {
-      await autonomousScheduler.start();
-      console.log("[Server] ✅ Autonomous system activated successfully");
-    } catch (error) {
-      console.error("[Server] ❌ Failed to start autonomous system:", error instanceof Error ? error.message : String(error));
-    }
-  }, 5000); // Wait 5 seconds for server to fully initialize
-  
+
   return httpServer;
 }

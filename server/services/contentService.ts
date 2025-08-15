@@ -1,137 +1,101 @@
+
 import { openaiService } from "./openaiService";
-import { sendToZapier } from "./zapierService";
-import { storage } from "../storage";
-import type { ContentIdea, PostAsset } from "@shared/schema";
+import { zapierService } from "./zapierService";
 
-export class ContentService {
-  async generateContentIdeas(
-    userId: string,
-    topic: string,
-    targetAudience: string,
-    platform: string,
-    tone: string,
-    quantity: number = 5
-  ): Promise<ContentIdea> {
-    const ideas = await openaiService.generateIdeas(
-      topic,
-      platform,
-      targetAudience,
-      tone,
-      quantity
-    );
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  platform: string;
+  status: "draft" | "scheduled" | "published";
+  userId: string;
+  createdAt: Date;
+  scheduledAt?: Date;
+  publishedAt?: Date;
+}
 
-    const contentIdea = await storage.createContentIdea({
-      userId,
-      topic,
-      targetAudience,
-      tone,
-      platform,
-      ideas: ideas,
-    });
+class ContentService {
+  private posts: Post[] = [];
 
-    return contentIdea;
+  async createPost(data: Omit<Post, "id" | "createdAt">): Promise<Post> {
+    const post: Post = {
+      ...data,
+      id: `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date(),
+    };
+
+    this.posts.push(post);
+    return post;
   }
 
-  async generatePostCaptions(
-    ideaId: string,
-    platform: string,
-    tone: string,
-    keywords?: string[]
-  ): Promise<any[]> {
-    const idea = await storage.getContentIdea(ideaId);
-    if (!idea) {
-      throw new Error("İçerik fikri bulunamadı");
+  async getAllPosts(userId?: string): Promise<Post[]> {
+    if (userId) {
+      return this.posts.filter(post => post.userId === userId);
     }
-
-    const ideaText = Array.isArray(idea.ideas) 
-      ? (idea.ideas as any[]).map(i => i.title).join(", ")
-      : idea.topic;
-
-    const captions = await openaiService.generateCaptions(
-      ideaText,
-      platform,
-      tone,
-      keywords
-    );
-
-    return captions;
+    return this.posts;
   }
 
-  async schedulePost(
-    postId: string,
-    scheduledAt: Date
-  ): Promise<PostAsset> {
-    const postAsset = await storage.getPostAsset(postId);
-    if (!postAsset) {
-      throw new Error("Gönderi bulunamadı");
-    }
-
-    // Just update scheduled date; actual sending handled via publishPostNow
-    return storage.updatePostAsset(postAsset.id, {
-      status: "scheduled",
-      scheduledAt,
-    });
+  async getPostById(id: string): Promise<Post | null> {
+    return this.posts.find(post => post.id === id) || null;
   }
 
-  async publishPostNow(postId: string): Promise<PostAsset> {
-    const postAsset = await storage.getPostAsset(postId);
-    if (!postAsset) {
-      throw new Error("Gönderi bulunamadı");
-    }
-    
+  async updatePost(id: string, updates: Partial<Post>): Promise<Post | null> {
+    const index = this.posts.findIndex(post => post.id === id);
+    if (index === -1) return null;
+
+    this.posts[index] = { ...this.posts[index], ...updates };
+    return this.posts[index];
+  }
+
+  async deletePost(id: string): Promise<boolean> {
+    const index = this.posts.findIndex(post => post.id === id);
+    if (index === -1) return false;
+
+    this.posts.splice(index, 1);
+    return true;
+  }
+
+  async publishPost(id: string): Promise<Post | null> {
+    const post = await this.getPostById(id);
+    if (!post) return null;
+
     try {
-      await sendToZapier({
-        text: `${postAsset.caption}\n\n${postAsset.hashtags || ""}`,
-        mediaUrl: postAsset.imageUrl || undefined,
-        postId: postAsset.id,
-        userId: postAsset.userId,
-        platform: postAsset.platform,
+      await zapierService.publishContent({
+        content: post.content,
+        platforms: [post.platform]
       });
 
-      const updatedPost = await storage.updatePostAsset(postAsset.id, {
-        status: "posted",
+      return await this.updatePost(id, {
+        status: "published",
+        publishedAt: new Date()
       });
-
-      return updatedPost;
     } catch (error) {
-      console.error("Publish post error:", error);
-
-      await storage.updatePostAsset(postAsset.id, {
-        status: "failed",
-      });
-
-      throw new Error("Gönderi Zapier'e gönderilemedi");
+      console.error("Yayınlama hatası:", error);
+      throw error;
     }
   }
 
-  async generatePostsCSV(userId: string): Promise<string> {
-    const posts = await storage.getPostAssets(userId);
+  async schedulePost(id: string, scheduledAt: Date): Promise<Post | null> {
+    return await this.updatePost(id, {
+      status: "scheduled",
+      scheduledAt
+    });
+  }
+
+  async getPostStats(userId?: string): Promise<{
+    total: number;
+    published: number;
+    scheduled: number;
+    drafts: number;
+  }> {
+    const posts = await this.getAllPosts(userId);
     
-    const headers = [
-      "ID",
-      "Caption",
-      "Hashtags", 
-      "Platform",
-      "Status",
-      "Scheduled At",
-      "Created At"
-    ];
-
-    const rows = posts.map(post => [
-      post.id,
-      `"${post.caption.replace(/"/g, '""')}"`, // Escape quotes
-      `"${post.hashtags || ""}"`,
-      post.platform,
-      post.status,
-      post.scheduledAt ? post.scheduledAt.toISOString() : "",
-      post.createdAt ? post.createdAt.toISOString() : ""
-    ]);
-
-    const csvContent = [headers, ...rows]
-      .map(row => row.join(","))
-      .join("\n");
-
-    return csvContent;
+    return {
+      total: posts.length,
+      published: posts.filter(p => p.status === "published").length,
+      scheduled: posts.filter(p => p.status === "scheduled").length,
+      drafts: posts.filter(p => p.status === "draft").length,
+    };
   }
 }
 
