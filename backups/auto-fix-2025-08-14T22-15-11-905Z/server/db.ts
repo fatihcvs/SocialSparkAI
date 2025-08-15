@@ -1,4 +1,3 @@
-```javascript
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
@@ -26,23 +25,9 @@ pool.on('connect', (client) => {
   client.query('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
   client.query('CREATE INDEX IF NOT EXISTS idx_content_ideas_user_id ON content_ideas(user_id)');
   client.query('CREATE INDEX IF NOT EXISTS idx_content_ideas_created_at ON content_ideas(created_at)');
-  client.query('CREATE INDEX IF NOT EXISTS idx_content_ideas_status ON content_ideas(status)'); // New index for status
-  client.query('CREATE INDEX IF NOT EXISTS idx_content_ideas_title ON content_ideas(title)'); // New index for title
   client.query('CREATE INDEX IF NOT EXISTS idx_post_assets_user_id ON post_assets(user_id)');
   client.query('CREATE INDEX IF NOT EXISTS idx_post_assets_status ON post_assets(status)');
-  client.query('CREATE INDEX IF NOT EXISTS idx_post_assets_created_at ON post_assets(created_at)'); // New index for created_at
 });
 
 // Initialize the database with the drizzle ORM
 export const db = drizzle({ client: pool, schema });
-```
-
-### Explanation of Changes:
-1. **New Indexes on `content_ideas`:**
-   - Added an index on the `status` column to optimize queries filtering by status.
-   - Added an index on the `title` column to improve search performance on titles.
-
-2. **New Index on `post_assets`:**
-   - Added an index on the `created_at` column to enhance performance for queries ordered by creation date.
-
-These changes aim to improve query performance by ensuring that frequently queried columns are indexed, thus reducing response times and enhancing user experience.
