@@ -143,3 +143,177 @@ export default function RecentPosts() {
     </Card>
   );
 }
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Clock, MoreHorizontal, ExternalLink, Edit3 } from "lucide-react";
+
+export default function RecentPosts() {
+  const recentPosts = [
+    {
+      id: 1,
+      caption: "Kahve deneyimi ve müşteri memnuniyeti üzerine düşünceler ☕️ #quality #experience",
+      platform: "instagram",
+      status: "posted",
+      scheduledAt: "2025-01-15T14:30:00Z",
+      createdAt: "2025-01-15T10:00:00Z",
+      engagement: { likes: 45, comments: 8, shares: 3 }
+    },
+    {
+      id: 2,
+      caption: "Startup dünyasında en önemli şey müşteri geri bildirimleri. İşte öğrendiklerimiz:",
+      platform: "linkedin",
+      status: "scheduled",
+      scheduledAt: "2025-01-16T09:00:00Z",
+      createdAt: "2025-01-15T16:20:00Z",
+      engagement: null
+    },
+    {
+      id: 3,
+      caption: "2025'te AI teknolojisi sosyal medya pazarlamasını nasıl dönüştürüyor? 🤖",
+      platform: "x",
+      status: "draft",
+      scheduledAt: null,
+      createdAt: "2025-01-15T18:45:00Z",
+      engagement: null
+    }
+  ];
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform) {
+      case "instagram": return "📸";
+      case "linkedin": return "💼";
+      case "x": return "🐦";
+      case "tiktok": return "🎵";
+      default: return "📱";
+    }
+  };
+
+  const getPlatformColor = (platform: string) => {
+    switch (platform) {
+      case 'instagram': return 'bg-pink-100 text-pink-700';
+      case 'linkedin': return 'bg-blue-100 text-blue-700';
+      case 'x': return 'bg-gray-100 text-gray-700';
+      case 'tiktok': return 'bg-purple-100 text-purple-700';
+      default: return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'posted': return 'bg-green-100 text-green-700';
+      case 'scheduled': return 'bg-blue-100 text-blue-700';
+      case 'draft': return 'bg-orange-100 text-orange-700';
+      case 'failed': return 'bg-red-100 text-red-700';
+      default: return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'posted': return 'Yayında';
+      case 'scheduled': return 'Planlandı';
+      case 'draft': return 'Taslak';
+      case 'failed': return 'Başarısız';
+      default: return 'Bilinmiyor';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Son Gönderiler
+          </CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => window.location.href = '/posts'}>
+            Tümünü Gör
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {recentPosts.map((post) => (
+          <div key={post.id} className="border border-slate-200 rounded-lg p-3">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Badge className={getPlatformColor(post.platform)}>
+                  {getPlatformIcon(post.platform)} {post.platform}
+                </Badge>
+                <Badge className={getStatusColor(post.status)} variant="outline">
+                  {getStatusText(post.status)}
+                </Badge>
+              </div>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Content */}
+            <p className="text-sm text-slate-700 mb-3 line-clamp-2">
+              {post.caption}
+            </p>
+
+            {/* Metadata */}
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <div>
+                {post.status === 'scheduled' && post.scheduledAt ? (
+                  <span>Yayın: {formatDate(post.scheduledAt)}</span>
+                ) : post.status === 'posted' ? (
+                  <span>Yayında: {formatDate(post.scheduledAt || post.createdAt)}</span>
+                ) : (
+                  <span>Oluşturuldu: {formatDate(post.createdAt)}</span>
+                )}
+              </div>
+              
+              {post.engagement && (
+                <div className="flex items-center gap-3">
+                  <span>❤️ {post.engagement.likes}</span>
+                  <span>💬 {post.engagement.comments}</span>
+                  <span>🔄 {post.engagement.shares}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+              {post.status === 'draft' && (
+                <Button size="sm" variant="outline">
+                  <Edit3 className="w-3 h-3 mr-1" />
+                  Düzenle
+                </Button>
+              )}
+              {(post.status === 'posted' || post.status === 'scheduled') && (
+                <Button size="sm" variant="outline">
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                  Görüntüle
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {recentPosts.length === 0 && (
+          <div className="text-center py-8">
+            <Clock className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 mb-4">Henüz gönderi yok</p>
+            <Button onClick={() => window.location.href = '/ai-content'}>
+              İlk Gönderini Oluştur
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

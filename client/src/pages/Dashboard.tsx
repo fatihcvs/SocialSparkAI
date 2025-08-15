@@ -3,8 +3,9 @@ import QuickStart from "@/components/QuickStart";
 import ContentCalendar from "@/components/ContentCalendar";
 import AITools from "@/components/AITools";
 import RecentPosts from "@/components/RecentPosts";
-import { Card, CardContent } from "@/components/ui/card";
-import { FileText, CalendarCheck, Brain, Zap } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileText, CalendarCheck, Brain, Zap, PenTool, ImageIcon, Send, Copy } from "lucide-react";
 import type { UserStats } from "@/types";
 
 export default function Dashboard() {

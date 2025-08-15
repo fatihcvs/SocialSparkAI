@@ -17,7 +17,7 @@ import {
   Brain, 
   Sparkles, 
   PenTool, 
-  ImageIcon, 
+  ImageIcon as Image, 
   RefreshCw, 
   Save,
   Send,
@@ -30,7 +30,8 @@ import {
   Clock,
   TrendingUp,
   Users,
-  Globe
+  Globe,
+  Copy
 } from "lucide-react";
 import CaptionGenerator from "@/components/CaptionGenerator";
 import type { ContentIdea, CaptionVariant } from "@/types";
@@ -752,7 +753,7 @@ export default function AIContent() {
                           platform: "",
                           scheduledAt: "",
                         };
-                        localStorage.setItem('pendingPost', JSON.JSON.stringify(postData));
+                        localStorage.setItem('pendingPost', JSON.stringify(postData));
                         window.open('/social-publishing', '_blank');
                       }}
                       className="flex-1"
