@@ -378,6 +378,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API usage stats
+  app.get("/api/usage/stats", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const usage = await storage.getApiUsageStats(req.user!.id, since);
+      res.json({
+        ideas: usage.ai_ideas || 0,
+        captions: usage.ai_captions || 0,
+        images: usage.ai_images || 0,
+      });
+    } catch (error) {
+      console.error("Get API usage stats error:", error);
+      res.status(500).json({
+        error: { code: "INTERNAL_ERROR", message: "API kullanım istatistikleri alınamadı" },
+      });
+    }
+  });
+
   // Integration routes (Zapier/Make webhook)
   app.use("/api/integrations", integrationRoutes);
 

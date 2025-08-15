@@ -65,6 +65,7 @@ export interface IStorage {
 
   // API usage tracking
   getApiUsage(userId: string, endpoint: string, since: Date): Promise<number>;
+  getApiUsageStats(userId: string, since: Date): Promise<Record<string, number>>;
   incrementApiUsage(userId: string, endpoint: string): Promise<void>;
 }
 
@@ -354,6 +355,23 @@ export class DatabaseStorage implements IStorage {
       );
 
     return result?.total || 0;
+  }
+
+  async getApiUsageStats(userId: string, since: Date): Promise<Record<string, number>> {
+    const results = await db
+      .select({
+        endpoint: apiUsage.endpoint,
+        total: sql<number>`sum(${apiUsage.count})`,
+      })
+      .from(apiUsage)
+      .where(and(eq(apiUsage.userId, userId), gte(apiUsage.date, since)))
+      .groupBy(apiUsage.endpoint);
+
+    const stats: Record<string, number> = {};
+    for (const row of results) {
+      stats[row.endpoint] = Number(row.total);
+    }
+    return stats;
   }
 
   async incrementApiUsage(userId: string, endpoint: string): Promise<void> {
