@@ -44,12 +44,11 @@ export async function sendToZapier(payload: ZapierPayload): Promise<{ success: b
   try {
     const response = await fetch(url, {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
         "User-Agent": "SocialSparkAI/1.0"
       },
       body: JSON.stringify(enhancedPayload),
-      timeout: 30000, // 30 seconds timeout
     });
 
     if (!response.ok) {
@@ -61,7 +60,7 @@ export async function sendToZapier(payload: ZapierPayload): Promise<{ success: b
     console.log(`[Zapier] Post gönderildi - Platform: ${payload.platform}, PostID: ${payload.postId}`);
     
     return { success: true, zapierResponse: result };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Zapier webhook error:", error);
     if (error.name === 'AbortError') {
       throw new Error("Zapier webhook timeout - 30 saniye içinde yanıt alınamadı");
@@ -86,10 +85,9 @@ export async function testZapierConnection(): Promise<{ connected: boolean; resp
     };
 
     const response = await fetch(url, {
-      method: "POST", 
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(testPayload),
-      timeout: 10000
+      body: JSON.stringify(testPayload)
     });
 
     const responseTime = Date.now() - startTime;
@@ -99,11 +97,19 @@ export async function testZapierConnection(): Promise<{ connected: boolean; resp
       responseTime,
       error: response.ok ? undefined : `HTTP ${response.status}`
     };
-  } catch (error) {
-    return { 
-      connected: false, 
+  } catch (error: any) {
+    return {
+      connected: false,
       responseTime: Date.now() - startTime,
-      error: error.message 
+      error: error.message
     };
   }
 }
+
+export const zapierService = {
+  async publishContent({ content, platforms }: { content: string; platforms: string[] }) {
+    for (const platform of platforms) {
+      await sendToZapier({ text: content, platform });
+    }
+  },
+};
