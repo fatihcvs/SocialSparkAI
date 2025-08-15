@@ -31,7 +31,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      
+
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -121,32 +121,32 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex flex-col items-center gap-2 h-20"
               onClick={() => window.location.href = '/ai-content?tab=ideas'}
             >
               <Brain className="w-5 h-5" />
               <span className="text-sm">AI Fikir Üret</span>
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex flex-col items-center gap-2 h-20"
               onClick={() => window.location.href = '/ai-content?tab=captions'}
             >
               <PenTool className="w-5 h-5" />
               <span className="text-sm">Caption Yaz</span>
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex flex-col items-center gap-2 h-20"
               onClick={() => window.location.href = '/image-generation'}
             >
               <ImageIcon className="w-5 h-5" />
               <span className="text-sm">Görsel Oluştur</span>
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex flex-col items-center gap-2 h-20"
               onClick={() => window.location.href = '/social-publishing'}
             >
