@@ -39,6 +39,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trust proxy for rate limiting
   app.set("trust proxy", 1);
 
+  // Basic health check for uptime monitoring
+  app.get('/api/health', (_req, res) => {
+    res.json({ ok: true });
+  });
+
   // Auth routes with IP rate limiting
   app.use("/api/auth", ipRateLimit(10, 15)); // 10 requests per 15 minutes per IP
 
