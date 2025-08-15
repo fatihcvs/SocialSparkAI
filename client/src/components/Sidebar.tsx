@@ -13,8 +13,7 @@ import {
   CreditCard,
   Settings,
   Shield,
-  Activity,
-  Bot
+  Activity
 } from "lucide-react";
 
 const navigation = [
@@ -25,8 +24,6 @@ const navigation = [
   { name: "Görsel Oluştur", href: "/image-generation", icon: Image },
   { name: "Zapier Entegrasyonu", href: "/zapier-integration", icon: Share2 },
   { name: "Admin Paneli", href: "/admin", icon: Shield, admin: true },
-  { name: "🤖 Live Monitor", href: "/live-monitoring", icon: Activity, admin: true },
-  { name: "🤖 Autonomous AI", href: "/autonomous-panel", icon: Bot, admin: true },
 ];
 
 const secondaryNavigation = [
@@ -74,7 +71,7 @@ export default function Sidebar() {
             </Link>
           );
         })}
-        
+
         <div className="pt-4 mt-4 border-t border-slate-200">
           {secondaryNavigation.map((item) => {
             const isActive = location === item.href;

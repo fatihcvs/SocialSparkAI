@@ -3,7 +3,6 @@ import QuickStart from "@/components/QuickStart";
 import ContentCalendar from "@/components/ContentCalendar";
 import AITools from "@/components/AITools";
 import RecentPosts from "@/components/RecentPosts";
-import { GitHubSyncNotification } from "@/components/GitHubSyncNotification";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, CalendarCheck, Brain, Zap } from "lucide-react";
 import type { UserStats } from "@/types";
@@ -32,8 +31,10 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       {/* GitHub Sync Notification */}
-      <GitHubSyncNotification />
-      
+      <div className="mb-6">
+        <GitHubSyncNotification />
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>

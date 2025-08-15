@@ -19,8 +19,6 @@ import Settings from "@/pages/Settings";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/not-found";
 import Admin from "@/pages/Admin";
-import LiveMonitoring from "@/pages/LiveMonitoring";
-import AutonomousPanel from "@/pages/AutonomousPanel";
 
 // Layout components
 import Sidebar from "@/components/Sidebar";
@@ -64,8 +62,6 @@ function Router() {
             <Route path="/billing" component={Billing} />
             <Route path="/settings" component={Settings} />
             <Route path="/admin" component={Admin} />
-            <Route path="/live-monitoring" component={LiveMonitoring} />
-            <Route path="/autonomous-panel" component={AutonomousPanel} />
             <Route component={NotFound} />
           </Switch>
         </main>
