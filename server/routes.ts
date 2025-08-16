@@ -14,6 +14,7 @@ import { contentService } from "./services/contentService";
 import { iyzicoService } from "./services/iyzicoService";
 import type { AuthRequest } from "./middlewares/auth";
 import integrationRoutes from "./routes/integrations";
+import { registerPerformanceRoutes } from "./routes/performance.js";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Security middleware
@@ -592,6 +593,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mount route modules
   app.use('/api/integrations', integrationRoutes);
+
+  // Register performance routes directly
+  registerPerformanceRoutes(app);
 
   const httpServer = createServer(app);
 

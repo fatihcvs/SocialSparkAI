@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { cacheService } from "./cacheService";
+import { rateLimitService } from "./rateLimitService";
 
 // The newest OpenAI model is "gpt-4o" (released May 13, 2024).
 // Do not change this unless explicitly requested by the user.
@@ -6,7 +8,11 @@ const apiKey = process.env.OPENAI_API_KEY;
 if (!apiKey) {
   throw new Error("OPENAI_API_KEY is not set");
 }
-const openai = new OpenAI({ apiKey });
+const openai = new OpenAI({ 
+  apiKey,
+  timeout: 30000, // 30 seconds timeout
+  maxRetries: 0 // We handle retries in rateLimitService
+});
 
 export interface ContentIdea {
   title: string;
@@ -34,6 +40,17 @@ export class OpenAIService {
     tone: string,
     quantity: number = 5
   ): Promise<IdeasResponse> {
+    // Generate cache key
+    const cacheKey = cacheService.generateIdeasKey(topic, platform, targetAudience, tone, quantity);
+    
+    // Check cache first
+    const cachedResult = cacheService.get<IdeasResponse>(cacheKey);
+    if (cachedResult) {
+      console.log(`Cache HIT for ideas: ${cacheKey}`);
+      return cachedResult;
+    }
+    
+    console.log(`Cache MISS for ideas: ${cacheKey}`);
     const systemPrompt = `Sen dünya çapında tanınan bir Türk sosyal medya stratejist ve içerik uzmanısın. Amacın verilen konuya göre viral olma potansiyeli yüksek, etkileşimli içerik fikirleri üretmek.
 
 ZORUNLU JSON FORMATI - Bu formattan kesinlikle sapma:
@@ -87,23 +104,32 @@ Ton: ${tone}
 Her fikir platform özelliklerine uygun ve hedef kitleye hitap eden olmalı.`;
 
     try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.8,
-      });
+      // Execute with rate limiting
+      const response = await rateLimitService.execute(
+        async () => await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.8,
+        }),
+        `ideas-${Date.now()}`
+      );
 
       const content = response.choices[0].message.content || "{}";
       const result = JSON.parse(content);
       
-      return {
+      const finalResult: IdeasResponse = {
         calendarHints: result.calendarHints || ["Pazartesi Sabah", "Çarşamba Öğleden Sonra", "Cumartesi Sabah"],
         ideas: result.ideas || [],
       };
+
+      // Cache the result
+      cacheService.cacheIdeas(cacheKey, finalResult);
+      
+      return finalResult;
     } catch (error) {
       console.error("OpenAI ideas generation error:", error);
       throw new Error("İçerik fikirleri oluşturulamadı");
@@ -116,6 +142,17 @@ Her fikir platform özelliklerine uygun ve hedef kitleye hitap eden olmalı.`;
     tone: string,
     keywords?: string[]
   ): Promise<CaptionVariant[]> {
+    // Generate cache key
+    const cacheKey = cacheService.generateCaptionsKey(ideaOrRawIdea, platform, tone, keywords);
+    
+    // Check cache first
+    const cachedResult = cacheService.get<CaptionVariant[]>(cacheKey);
+    if (cachedResult) {
+      console.log(`Cache HIT for captions: ${cacheKey}`);
+      return cachedResult;
+    }
+    
+    console.log(`Cache MISS for captions: ${cacheKey}`);
     const systemPrompt = `Sen Türkiye'nin en başarılı sosyal medya copywriter'ısın. Görevin verilen fikre göre viral olma potansiyeli yüksek, etkileşimli caption varyantları yazmak.
 
 ZORUNLU JSON FORMATI:
@@ -171,19 +208,28 @@ Anahtar kelimeler: ${keywords?.join(", ") || "yok"}
 Her varyant platform limitine uygun olmalı ve farklı yaklaşım kullanmalı.`;
 
     try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.7,
-      });
+      // Execute with rate limiting
+      const response = await rateLimitService.execute(
+        async () => await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+        }),
+        `captions-${Date.now()}`
+      );
 
       const content = response.choices[0].message.content || "{}";
       const result = JSON.parse(content);
-      return result.variants || [];
+      const finalResult = result.variants || [];
+
+      // Cache the result
+      cacheService.cacheCaptions(cacheKey, finalResult);
+
+      return finalResult;
     } catch (error) {
       console.error("OpenAI caption generation error:", error);
       throw new Error("Caption varyantları oluşturulamadı");
@@ -195,6 +241,17 @@ Her varyant platform limitine uygun olmalı ve farklı yaklaşım kullanmalı.`;
     aspectRatio: string = "1:1",
     styleHints?: string
   ): Promise<{ url: string }> {
+    // Generate cache key
+    const cacheKey = cacheService.generateImageKey(prompt, aspectRatio, styleHints);
+    
+    // Check cache first (shorter TTL for images due to URL expiration)
+    const cachedResult = cacheService.get<{ url: string }>(cacheKey);
+    if (cachedResult) {
+      console.log(`Cache HIT for image: ${cacheKey}`);
+      return cachedResult;
+    }
+    
+    console.log(`Cache MISS for image: ${cacheKey}`);
     try {
       let enhancedPrompt = prompt;
       if (styleHints) {
@@ -209,19 +266,29 @@ Her varyant platform limitine uygun olmalı ve farklı yaklaşım kullanmalı.`;
         size = "1024x1792";
       }
 
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: enhancedPrompt,
-        n: 1,
-        size,
-        quality: "standard",
-      });
+      // Execute with rate limiting (different queue for images)
+      const response = await rateLimitService.execute(
+        async () => await openai.images.generate({
+          model: "dall-e-3",
+          prompt: enhancedPrompt,
+          n: 1,
+          size,
+          quality: "standard",
+        }),
+        `image-${Date.now()}`
+      );
 
       const imageUrl = response.data?.[0]?.url;
       if (!imageUrl) {
         throw new Error("Görsel URL'si alınamadı");
       }
-      return { url: imageUrl };
+
+      const finalResult = { url: imageUrl };
+
+      // Cache the result (short TTL due to DALL-E URL expiration)
+      cacheService.cacheImage(cacheKey, finalResult);
+
+      return finalResult;
     } catch (error) {
       console.error("OpenAI image generation error:", error);
       throw new Error("Görsel oluşturulamadı");

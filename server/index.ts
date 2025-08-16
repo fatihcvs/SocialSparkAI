@@ -4,10 +4,15 @@ dotenv.config();
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { performanceMonitor, healthCheck } from "./middlewares/performanceMonitor";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Add performance monitoring and health check
+app.use(performanceMonitor);
+app.use(healthCheck);
 
 app.use((req, res, next) => {
   const start = Date.now();
