@@ -5,20 +5,24 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 
-// Pages
+// Pages (optimized lazy loading)
 import Landing from "@/pages/Landing";
-import Dashboard from "@/pages/Dashboard";
-import Calendar from "@/pages/Calendar";
-import Posts from "@/pages/Posts";
-import AIContent from "@/pages/AIContent";
-import ImageGeneration from "@/pages/ImageGeneration";
-import ZapierIntegration from "@/pages/ZapierIntegration";
-import SocialPublishing from "@/pages/SocialPublishing";
-import Billing from "@/pages/Billing";
-import Settings from "@/pages/Settings";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/not-found";
-import Admin from "@/pages/Admin";
+import {
+  LazyDashboard,
+  LazyCalendar,
+  LazyPosts,
+  LazyAIContent,
+  LazyImageGeneration,
+  LazyZapierIntegration,
+  LazySocialPublishing,
+  LazyBilling,
+  LazySettings,
+  LazyAdmin,
+  LazyAdvancedAI,
+  LazySocialCalendar
+} from "@/components/LazyComponents";
 
 // Layout components
 import Sidebar from "@/components/Sidebar";
@@ -52,16 +56,18 @@ function Router() {
         <TopBar />
         <main className="px-6 py-6">
           <Switch>
-            <Route path="/" component={Dashboard} />
-            <Route path="/calendar" component={Calendar} />
-            <Route path="/posts" component={Posts} />
-            <Route path="/ai-content" component={AIContent} />
-            <Route path="/image-generation" component={ImageGeneration} />
-            <Route path="/zapier-integration" component={ZapierIntegration} />
-            <Route path="/social-publishing" component={SocialPublishing} />
-            <Route path="/billing" component={Billing} />
-            <Route path="/settings" component={Settings} />
-            <Route path="/admin" component={Admin} />
+            <Route path="/" component={LazyDashboard} />
+            <Route path="/calendar" component={LazyCalendar} />
+            <Route path="/social-calendar" component={LazySocialCalendar} />
+            <Route path="/posts" component={LazyPosts} />
+            <Route path="/ai-content" component={LazyAIContent} />
+            <Route path="/image-generation" component={LazyImageGeneration} />
+            <Route path="/zapier-integration" component={LazyZapierIntegration} />
+            <Route path="/social-publishing" component={LazySocialPublishing} />
+            <Route path="/billing" component={LazyBilling} />
+            <Route path="/settings" component={LazySettings} />
+            <Route path="/advanced-ai" component={LazyAdvancedAI} />
+            <Route path="/admin" component={LazyAdmin} />
             <Route component={NotFound} />
           </Switch>
         </main>

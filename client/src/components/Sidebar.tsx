@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { 
   Zap, 
   LayoutDashboard, 
-  Calendar, 
+  Calendar,
+  CalendarClock,
   FileText, 
   Brain, 
   Image, 
@@ -13,14 +14,17 @@ import {
   CreditCard,
   Settings,
   Shield,
-  Activity
+  Activity,
+  Sparkles
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "İçerik Takvimi", href: "/calendar", icon: Calendar },
+  { name: "Sosyal Takvim", href: "/social-calendar", icon: CalendarClock },
   { name: "Gönderiler", href: "/posts", icon: FileText },
   { name: "AI İçerik Üret", href: "/ai-content", icon: Brain },
+  { name: "Gelişmiş AI", href: "/advanced-ai", icon: Sparkles },
   { name: "Görsel Oluştur", href: "/image-generation", icon: Image },
   { name: "Zapier Entegrasyonu", href: "/zapier-integration", icon: Share2 },
   { name: "Admin Paneli", href: "/admin", icon: Shield, admin: true },

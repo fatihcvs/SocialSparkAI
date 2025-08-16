@@ -4,10 +4,15 @@ dotenv.config();
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { performanceMonitor, healthCheck } from "./middlewares/performanceMonitor";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Add performance monitoring and health check
+app.use(performanceMonitor);
+app.use(healthCheck);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -49,6 +54,15 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
     throw err;
   });
+
+  // Initialize WebSocket service
+  try {
+    const { initializeWebSocketService } = await import('./services/websocketService.js');
+    initializeWebSocketService(server);
+    log('WebSocket service initialized');
+  } catch (error) {
+    log('Failed to initialize WebSocket service:', String(error));
+  }
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
