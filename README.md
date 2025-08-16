@@ -102,6 +102,16 @@ cp .env.example .env
 npm run dev
 ```
 
+### Geliştirme Komutları
+Aşağıdaki komutlar yerel geliştirme sürecinde yardımcı olur:
+
+```bash
+npm run lint       # ESLint ile kod kalitesini kontrol et
+npm run typecheck  # TypeScript tip kontrolü
+npm test           # Vitest testlerini çalıştır
+npm run build      # Üretim derlemesi
+```
+
 ### 4. Zapier Webhook Kurulumu (Pro Özellik)
 ZAPIER_HOOK_URL'yi Replit Secrets'a ekleyin:
 
