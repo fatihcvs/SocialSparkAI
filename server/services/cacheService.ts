@@ -93,6 +93,21 @@ class CacheService {
   }
 
   /**
+   * Legacy support methods for compatibility
+   */
+  setItem(key: string, value: any, ttl?: number): void {
+    this.cache.set(key, value, ttl ?? this.DEFAULT_TTL);
+  }
+
+  getItem<T>(key: string): T | undefined {
+    return this.get<T>(key);
+  }
+
+  deleteItem(key: string): boolean {
+    return this.delete(key);
+  }
+
+  /**
    * Clear all cache
    */
   clear(): void {

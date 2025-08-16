@@ -164,10 +164,10 @@ export function useRealTimeQuery<T>(
   enabled: boolean = true
 ) {
   const queryClient = useQueryClient();
-  const { data: user } = useQuery({ queryKey: ["/api/auth/me"] });
+  const { data: user } = useQuery<{ token?: string }>({ queryKey: ["/api/auth/me"] });
   const token = user?.token;
 
-  const { subscribe, isConnected } = useWebSocket(token);
+  const { subscribe, isConnected } = useWebSocket(token || null);
 
   useEffect(() => {
     if (!isConnected || !enabled) return;

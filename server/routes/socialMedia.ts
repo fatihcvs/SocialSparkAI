@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import { z } from "zod";
 import { socialMediaService } from "../services/socialMediaService";
 import { schedulingService } from "../services/schedulingService";
@@ -6,6 +6,10 @@ import { webhookManager } from "../services/webhookManager";
 import { authenticateToken } from "../middlewares/auth";
 
 const router = Router();
+
+interface AuthenticatedRequest extends Request {
+  user?: { id: string };
+}
 
 // Schedule post schema
 const schedulePostSchema = z.object({
@@ -34,7 +38,7 @@ const analyticsSchema = z.object({
 });
 
 // PHASE 6: Schedule a post
-router.post("/schedule", authenticateToken, async (req, res) => {
+router.post("/schedule", authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.id;
     const data = schedulePostSchema.parse(req.body);
@@ -69,7 +73,7 @@ router.post("/schedule", authenticateToken, async (req, res) => {
 });
 
 // Get scheduled posts
-router.get("/scheduled", authenticateToken, async (req, res) => {
+router.get("/scheduled", authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.id;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -92,7 +96,7 @@ router.get("/scheduled", authenticateToken, async (req, res) => {
 });
 
 // Get suggested posting times
-router.get("/optimal-times/:platform", authenticateToken, async (req, res) => {
+router.get("/optimal-times/:platform", authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { platform } = req.params;
     const timezone = req.query.timezone as string || 'UTC';
@@ -117,7 +121,7 @@ router.get("/optimal-times/:platform", authenticateToken, async (req, res) => {
 });
 
 // Record analytics data
-router.post("/analytics", authenticateToken, async (req, res) => {
+router.post("/analytics", authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.id;
     const data = analyticsSchema.parse(req.body);
@@ -140,7 +144,7 @@ router.post("/analytics", authenticateToken, async (req, res) => {
 });
 
 // Get analytics data
-router.get("/analytics", authenticateToken, async (req, res) => {
+router.get("/analytics", authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.id;
     const platform = req.query.platform as string;
@@ -164,7 +168,7 @@ router.get("/analytics", authenticateToken, async (req, res) => {
 });
 
 // Bulk schedule posts
-router.post("/bulk-schedule", authenticateToken, async (req, res) => {
+router.post("/bulk-schedule", authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.id;
     const { posts } = req.body;
@@ -202,7 +206,7 @@ router.post("/bulk-schedule", authenticateToken, async (req, res) => {
 });
 
 // Platform-specific content formatting
-router.post("/format-content", authenticateToken, async (req, res) => {
+router.post("/format-content", authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { content, platform } = req.body;
 
@@ -247,7 +251,7 @@ router.post("/format-content", authenticateToken, async (req, res) => {
 });
 
 // Update post status
-router.patch("/posts/:postId/status", authenticateToken, async (req, res) => {
+router.patch("/posts/:postId/status", authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { postId } = req.params;
     const { status } = req.body;
@@ -279,7 +283,7 @@ router.patch("/posts/:postId/status", authenticateToken, async (req, res) => {
 });
 
 // Get platform insights
-router.get("/insights/:platform", authenticateToken, async (req, res) => {
+router.get("/insights/:platform", authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.id;
     const { platform } = req.params;

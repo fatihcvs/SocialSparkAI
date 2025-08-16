@@ -56,7 +56,7 @@ export class AdvancedAIService {
       const personalizedSuggestions = await userBehaviorService.getPersonalizedSuggestions(userId, contentType);
       
       // Enhance prompt with personalization
-      const enhancedPrompt = await userBehaviorService.getDynamicPrompt(userId, prompt, {
+      let enhancedPrompt = await userBehaviorService.getDynamicPrompt(userId, prompt, {
         platform,
         contentType,
         suggestions: personalizedSuggestions

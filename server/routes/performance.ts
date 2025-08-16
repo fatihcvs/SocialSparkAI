@@ -1,8 +1,12 @@
-import { Express } from "express";
+import { Express, Request } from "express";
 import { enhancedAuth, requireRole } from "../middlewares/enhancedAuth";
 import { PerformanceMonitorService } from "../middlewares/performanceMonitor";
 import cacheService from "../services/cacheService";
 import { rateLimitService } from "../services/rateLimitService";
+
+interface AuthRequest extends Request {
+  user?: { id: string; plan: string };
+}
 
 export function registerPerformanceRoutes(app: Express) {
   /**
@@ -85,7 +89,7 @@ export function registerPerformanceRoutes(app: Express) {
   /**
    * Get user's rate limit status
    */
-  app.get("/api/user/rate-limit", enhancedAuth, async (req, res) => {
+  app.get("/api/user/rate-limit", enhancedAuth, async (req: AuthRequest, res) => {
     try {
       const user = req.user!;
       

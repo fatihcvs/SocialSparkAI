@@ -35,7 +35,7 @@ export default function SocialCalendar() {
   const queryClient = useQueryClient();
 
   // Get scheduled posts
-  const { data: scheduledPostsResponse, isLoading } = useQuery({
+  const { data: scheduledPostsResponse, isLoading } = useQuery<{ posts: ScheduledPost[] }>({
     queryKey: ["/api/social/scheduled"],
     retry: false
   });
@@ -43,7 +43,7 @@ export default function SocialCalendar() {
   const scheduledPosts = scheduledPostsResponse?.posts || [];
 
   // Get optimal times for selected platform
-  const { data: optimalTimesResponse } = useQuery({
+  const { data: optimalTimesResponse } = useQuery<{ suggestions: OptimalTime[] }>({
     queryKey: ["/api/social/optimal-times/linkedin"],
     enabled: selectedPlatforms.length > 0,
     retry: false
@@ -265,7 +265,7 @@ export default function SocialCalendar() {
                   <div>
                     <label className="text-sm font-medium mb-2 block">Platformlar</label>
                     <div className="flex flex-wrap gap-2">
-                      {['linkedin', 'twitter', 'instagram', 'facebook', 'tiktok'].map(platform => (
+                      {['linkedin', 'twitter', 'instagram', 'facebook', 'tiktok'].map((platform: string) => (
                         <Badge
                           key={platform}
                           variant={selectedPlatforms.includes(platform) ? "default" : "outline"}
@@ -376,7 +376,7 @@ export default function SocialCalendar() {
                     <div key={post.id} className="p-3 border rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex space-x-1">
-                          {Array.isArray(post.platforms) && post.platforms.map(platform => (
+                          {Array.isArray(post.platforms) && post.platforms.map((platform: string) => (
                             <Badge key={platform} variant="outline" className="text-xs">
                               {platform}
                             </Badge>
