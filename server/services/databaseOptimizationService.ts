@@ -98,8 +98,6 @@ class DatabaseOptimizationService {
   async batchInsertApiUsage(usageRecords: Array<{
     userId: string;
     endpoint: string;
-    tokensUsed: number;
-    cost: number;
   }>) {
     if (usageRecords.length === 0) return;
 
@@ -108,8 +106,6 @@ class DatabaseOptimizationService {
       id: `usage-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       userId: record.userId,
       endpoint: record.endpoint,
-      tokensUsed: record.tokensUsed,
-      cost: record.cost,
       createdAt: new Date(),
       updatedAt: new Date()
     }));

@@ -5,7 +5,7 @@ import AITools from "@/components/AITools";
 import RecentPosts from "@/components/RecentPosts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, CalendarCheck, Brain, Zap, PenTool, ImageIcon, Send, Copy } from "lucide-react";
+import { FileText, CalendarCheck, Brain, Zap, PenTool, ImageIcon, Send, Copy, TrendingUp } from "lucide-react";
 import type { UserStats } from "@/types";
 
 export default function Dashboard() {
@@ -31,88 +31,84 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-
-
-      {/* Quick Stats */}
+      {/* Enhanced Stats Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardContent className="pt-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-blue-600" />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-600 mb-1">Toplam Gönderiler</p>
+                <p className="text-3xl font-bold text-blue-900">{stats?.totalPosts || 0}</p>
+                <div className="flex items-center text-sm text-green-600 mt-1">
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                  +12%
                 </div>
               </div>
-              <div className="ml-4">
-                <div className="text-sm font-medium text-slate-500">Toplam Gönderi</div>
-                <div className="text-2xl font-semibold text-slate-900" data-testid="stat-total-posts">
-                  {stats?.totalPosts || 0}
-                </div>
+              <div className="p-3 rounded-full bg-blue-200">
+                <FileText className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <CardContent className="pt-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CalendarCheck className="w-4 h-4 text-green-600" />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-green-600 mb-1">Planlanmış</p>
+                <p className="text-3xl font-bold text-green-900">{stats?.scheduledPosts || 0}</p>
+                <div className="flex items-center text-sm text-green-600 mt-1">
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                  +8%
                 </div>
               </div>
-              <div className="ml-4">
-                <div className="text-sm font-medium text-slate-500">Planlanmış</div>
-                <div className="text-2xl font-semibold text-slate-900" data-testid="stat-scheduled-posts">
-                  {stats?.scheduledPosts || 0}
-                </div>
+              <div className="p-3 rounded-full bg-green-200">
+                <CalendarCheck className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
           <CardContent className="pt-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Brain className="w-4 h-4 text-purple-600" />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-purple-600 mb-1">AI Kullanımı</p>
+                <p className="text-3xl font-bold text-purple-900">{(stats as any)?.aiUsageToday || 0}</p>
+                <div className="flex items-center text-sm text-red-600 mt-1">
+                  <span className="mr-1">↘</span>
+                  -5%
                 </div>
               </div>
-              <div className="ml-4">
-                <div className="text-sm font-medium text-slate-500">AI Fikir</div>
-                <div className="text-2xl font-semibold text-slate-900" data-testid="stat-ai-ideas">
-                  {stats?.aiIdeas || 0}
-                </div>
+              <div className="p-3 rounded-full bg-purple-200">
+                <Brain className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
           <CardContent className="pt-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-orange-600" />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-orange-600 mb-1">Bu Ay</p>
+                <p className="text-3xl font-bold text-orange-900">{(stats as any)?.aiUsageMonth || 0}</p>
+                <div className="flex items-center text-sm text-green-600 mt-1">
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                  +24%
                 </div>
               </div>
-              <div className="ml-4">
-                <div className="text-sm font-medium text-slate-500">Günlük Limit</div>
-                <div className="text-2xl font-semibold text-slate-900" data-testid="stat-daily-limit">
-                  {stats?.dailyUsage || 0}/{stats?.dailyLimit || 0}
-                </div>
+              <div className="p-3 rounded-full bg-orange-200">
+                <Zap className="h-6 w-6 text-orange-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Start Wizard */}
-      <QuickStart />
-
-      {/* Quick Actions */}
-      <Card>
+      
+      {/* Enhanced Quick Actions */}
+      <Card className="bg-gradient-to-r from-primary/5 to-secondary/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="w-5 h-5" />
