@@ -35,17 +35,21 @@ export default function SocialCalendar() {
   const queryClient = useQueryClient();
 
   // Get scheduled posts
-  const { data: scheduledPosts = [], isLoading } = useQuery<ScheduledPost[]>({
+  const { data: scheduledPostsResponse, isLoading } = useQuery({
     queryKey: ["/api/social/scheduled"],
     retry: false
   });
 
+  const scheduledPosts = scheduledPostsResponse?.posts || [];
+
   // Get optimal times for selected platform
-  const { data: optimalTimes } = useQuery<OptimalTime[]>({
+  const { data: optimalTimesResponse } = useQuery({
     queryKey: ["/api/social/optimal-times/linkedin"],
     enabled: selectedPlatforms.length > 0,
     retry: false
   });
+
+  const optimalTimes = optimalTimesResponse?.suggestions || [];
 
   // Schedule post mutation
   const schedulePostMutation = useMutation({
@@ -125,10 +129,10 @@ export default function SocialCalendar() {
     const days = [];
 
     for (let date = new Date(firstDay); date <= lastDay; date.setDate(date.getDate() + 1)) {
-      const dayPosts = scheduledPosts.filter(post => {
+      const dayPosts = Array.isArray(scheduledPosts) ? scheduledPosts.filter(post => {
         const postDate = new Date(post.scheduledAt);
         return postDate.toDateString() === date.toDateString();
-      });
+      }) : [];
 
       days.push({
         date: new Date(date),
@@ -322,7 +326,7 @@ export default function SocialCalendar() {
           )}
 
           {/* Optimal Times */}
-          {optimalTimes && (
+          {Array.isArray(optimalTimes) && optimalTimes.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -339,7 +343,7 @@ export default function SocialCalendar() {
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <div className="font-medium">
-                          {formatDate(time.date)}
+                          {formatDate(new Date(time.date))}
                         </div>
                         <div className="text-sm text-gray-600">
                           {time.reason}
@@ -367,31 +371,37 @@ export default function SocialCalendar() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {scheduledPosts.slice(0, 5).map((post) => (
-                  <div key={post.id} className="p-3 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex space-x-1">
-                        {post.platforms.map(platform => (
-                          <Badge key={platform} variant="outline" className="text-xs">
-                            {platform}
-                          </Badge>
-                        ))}
+                {Array.isArray(scheduledPosts) && scheduledPosts.length > 0 ? (
+                  scheduledPosts.slice(0, 5).map((post) => (
+                    <div key={post.id} className="p-3 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex space-x-1">
+                          {Array.isArray(post.platforms) && post.platforms.map(platform => (
+                            <Badge key={platform} variant="outline" className="text-xs">
+                              {platform}
+                            </Badge>
+                          ))}
+                        </div>
+                        <Badge 
+                          variant={post.status === 'sent' ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {post.status}
+                        </Badge>
                       </div>
-                      <Badge 
-                        variant={post.status === 'sent' ? 'default' : 'secondary'}
-                        className="text-xs"
-                      >
-                        {post.status}
-                      </Badge>
+                      <div className="text-sm text-gray-600 truncate">
+                        {post.content}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {formatDate(new Date(post.scheduledAt))}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 truncate">
-                      {post.content}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {formatDate(new Date(post.scheduledAt))}
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-gray-500 text-center py-4">
+                    Henüz zamanlanmış post yok
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
