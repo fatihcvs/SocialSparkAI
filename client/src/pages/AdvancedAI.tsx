@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,15 +46,17 @@ export default function AdvancedAI() {
   const queryClient = useQueryClient();
 
   // Get personalized suggestions
-  const { data: suggestions } = useQuery<PersonalizedSuggestions>({
+  const { data: suggestions, isLoading: suggestionsLoading } = useQuery<PersonalizedSuggestions>({
     queryKey: ["/api/ai/personalized-suggestions", contentType],
-    enabled: true
+    enabled: true,
+    retry: false
   });
 
   // Get performance analysis
-  const { data: performanceAnalysis } = useQuery({
+  const { data: performanceAnalysis, isLoading: analysisLoading } = useQuery({
     queryKey: ["/api/ai/performance-analysis"],
-    enabled: true
+    enabled: true,
+    retry: false
   });
 
   // Personalized content generation
@@ -62,17 +64,23 @@ export default function AdvancedAI() {
     mutationFn: async (data: { prompt: string; platform: string; contentType: string }) => {
       const response = await fetch("/api/ai/personalized-content", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token') || ''}`
+        },
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error("Failed to generate personalized content");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || "Failed to generate personalized content");
+      }
       return response.json();
     },
     onSuccess: () => {
       toast.success("Kişiselleştirilmiş içerik oluşturuldu!");
     },
-    onError: () => {
-      toast.error("İçerik oluşturulurken hata oluştu");
+    onError: (error: any) => {
+      toast.error(error.message || "İçerik oluşturulurken hata oluştu");
     }
   });
 
@@ -81,14 +89,23 @@ export default function AdvancedAI() {
     mutationFn: async (data: { content: string; platform: string }) => {
       const response = await fetch("/api/ai/score-content", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token') || ''}`
+        },
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error("Failed to score content");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || "Failed to score content");
+      }
       return response.json();
     },
     onSuccess: () => {
       toast.success("İçerik skorlandı!");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "İçerik skorlanırken hata oluştu");
     }
   });
 
@@ -97,14 +114,23 @@ export default function AdvancedAI() {
     mutationFn: async (data: { contentType: string; topic: string; platform: string; duration?: number }) => {
       const response = await fetch("/api/ai/multi-modal", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token') || ''}`
+        },
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error("Failed to generate multi-modal content");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || "Failed to generate multi-modal content");
+      }
       return response.json();
     },
     onSuccess: () => {
       toast.success("Multi-modal içerik oluşturuldu!");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Multi-modal içerik oluşturulurken hata oluştu");
     }
   });
 
@@ -113,14 +139,23 @@ export default function AdvancedAI() {
     mutationFn: async (data: { content: string; platform: string }) => {
       const response = await fetch("/api/ai/ab-test", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token') || ''}`
+        },
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error("Failed to generate A/B test recommendations");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || "Failed to generate A/B test recommendations");
+      }
       return response.json();
     },
     onSuccess: () => {
       toast.success("A/B test önerileri oluşturuldu!");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "A/B test önerileri oluşturulurken hata oluştu");
     }
   });
 
@@ -182,7 +217,11 @@ export default function AdvancedAI() {
         </motion.div>
 
         {/* Personalization Overview */}
-        {suggestions && (
+        {suggestionsLoading ? (
+          <div className="animate-pulse">
+            <div className="h-32 bg-gray-200 rounded-lg"></div>
+          </div>
+        ) : suggestions ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -229,6 +268,16 @@ export default function AdvancedAI() {
               </CardContent>
             </Card>
           </motion.div>
+        ) : (
+          <Card className="border-dashed">
+            <CardContent className="p-6 text-center">
+              <Brain className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium mb-2">AI Önerileri Hazırlanıyor</h3>
+              <p className="text-gray-600">
+                Daha fazla içerik ürettikçe kişiselleştirilmiş öneriler gelişecek.
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         {/* Main Tabs */}
