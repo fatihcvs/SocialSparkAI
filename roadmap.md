@@ -6,9 +6,9 @@
 - [x] Establish CI type-check script
 
 ## Phase 2: AI Content Engine
-- [ ] Finalize OpenAI service integration for idea/caption/image generation
-- [ ] Create REST endpoints for ideas, captions, and images
-- [ ] Rate limiting and plan-based usage counts (Free 5/day, Pro 50/day)
+- [x] Finalize OpenAI service integration for idea/caption/image generation
+- [x] Create REST endpoints for ideas, captions, and images
+- [x] Rate limiting and plan-based usage counts (Free 5/day, Pro 50/day)
 
 ## Phase 3: Content Planning
 - [ ] Implement database schema for posts and content ideas
