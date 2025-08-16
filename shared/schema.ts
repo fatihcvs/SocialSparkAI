@@ -8,6 +8,7 @@ import {
   boolean,
   integer,
   index,
+  decimal,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -142,6 +143,36 @@ export const apiUsageRelations = relations(apiUsage, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// Scheduled posts table for PHASE 6
+export const scheduledPosts = pgTable("scheduled_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  platforms: json("platforms").notNull(), // Array of platform names
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  status: varchar("status").notNull().default("pending"), // "pending" | "sent" | "failed"
+  zapierHookUrl: text("zapier_hook_url"),
+  metadata: json("metadata"), // Platform-specific settings
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Social analytics table for PHASE 6
+export const socialAnalytics = pgTable("social_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  platform: varchar("platform").notNull(),
+  postId: text("post_id"),
+  engagementRate: decimal("engagement_rate", { precision: 5, scale: 2 }),
+  reach: integer("reach"),
+  impressions: integer("impressions"),
+  likes: integer("likes"),
+  comments: integer("comments"),
+  shares: integer("shares"),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow()
+});
 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({

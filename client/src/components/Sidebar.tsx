@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { 
   Zap, 
   LayoutDashboard, 
-  Calendar, 
+  Calendar,
+  CalendarClock,
   FileText, 
   Brain, 
   Image, 
@@ -20,6 +21,7 @@ import {
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "İçerik Takvimi", href: "/calendar", icon: Calendar },
+  { name: "Sosyal Takvim", href: "/social-calendar", icon: CalendarClock },
   { name: "Gönderiler", href: "/posts", icon: FileText },
   { name: "AI İçerik Üret", href: "/ai-content", icon: Brain },
   { name: "Gelişmiş AI", href: "/advanced-ai", icon: Sparkles },

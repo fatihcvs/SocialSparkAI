@@ -20,7 +20,8 @@ import {
   LazyBilling,
   LazySettings,
   LazyAdmin,
-  LazyAdvancedAI
+  LazyAdvancedAI,
+  LazySocialCalendar
 } from "@/components/LazyComponents";
 
 // Layout components
@@ -57,6 +58,7 @@ function Router() {
           <Switch>
             <Route path="/" component={LazyDashboard} />
             <Route path="/calendar" component={LazyCalendar} />
+            <Route path="/social-calendar" component={LazySocialCalendar} />
             <Route path="/posts" component={LazyPosts} />
             <Route path="/ai-content" component={LazyAIContent} />
             <Route path="/image-generation" component={LazyImageGeneration} />

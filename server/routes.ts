@@ -17,6 +17,7 @@ import { advancedAIService } from "./services/advancedAIService";
 import type { AuthRequest } from "./middlewares/auth";
 import integrationRoutes from "./routes/integrations";
 import { registerPerformanceRoutes } from "./routes/performance.js";
+import socialMedia from "./routes/socialMedia";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Security middleware
@@ -789,6 +790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mount route modules
   app.use('/api/integrations', integrationRoutes);
+  app.use('/api/social', socialMedia);
 
   // Register performance routes directly
   registerPerformanceRoutes(app);
