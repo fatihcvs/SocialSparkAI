@@ -1,7 +1,7 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
 import jwt from 'jsonwebtoken';
-import { getCacheService } from './cacheService';
+import cacheService from './cacheService';
 
 interface AuthenticatedWebSocket extends WebSocket {
   userId?: string;
@@ -24,7 +24,7 @@ class WebSocketService {
   private clients: Map<string, AuthenticatedWebSocket> = new Map();
   private rooms: Map<string, Set<string>> = new Map(); // room -> userIds
   private userRooms: Map<string, Set<string>> = new Map(); // userId -> rooms
-  private cache = getCacheService();
+  private cache = cacheService;
 
   constructor(server: any) {
     this.wss = new WebSocketServer({ 

@@ -1,7 +1,7 @@
 import { Express } from "express";
 import { enhancedAuth, requireRole } from "../middlewares/enhancedAuth";
 import { PerformanceMonitorService } from "../middlewares/performanceMonitor";
-import { cacheService } from "../services/cacheService";
+import cacheService from "../services/cacheService";
 import { rateLimitService } from "../services/rateLimitService";
 
 export function registerPerformanceRoutes(app: Express) {

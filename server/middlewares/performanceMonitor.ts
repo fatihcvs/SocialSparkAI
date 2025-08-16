@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { cacheService } from '../services/cacheService';
+import cacheService from '../services/cacheService';
 
 interface PerformanceMetrics {
   endpoint: string;

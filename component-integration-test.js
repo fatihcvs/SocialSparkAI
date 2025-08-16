@@ -1,160 +1,211 @@
-// Enhanced Component Integration Test
-const fs = require('fs');
-const path = require('path');
+/**
+ * SocialSparkAI Component Integration Test Suite
+ * Tests all phases for functionality and integration
+ */
 
-console.log('🔍 Enhanced Component Integration Analysis\n');
+console.log('🧪 Starting SocialSparkAI Component Integration Tests...\n');
 
-// Test component dependencies and imports
-function testComponentIntegration() {
-  const componentsDir = 'client/src/components/ui';
-  const components = [
-    'enhanced-card.tsx',
-    'loading-states.tsx', 
-    'enhanced-layout.tsx',
-    'enhanced-button.tsx',
-    'enhanced-navigation.tsx',
-    'enhanced-toast.tsx'
-  ];
+// Test results tracker
+const testResults = {
+  phase1: { name: 'Backend Optimization', tests: 0, passed: 0, failed: 0 },
+  phase2: { name: 'UI/UX Improvements', tests: 0, passed: 0, failed: 0 },
+  phase3: { name: 'Mobile Responsiveness', tests: 0, passed: 0, failed: 0 },
+  phase4: { name: 'Real-time Features', tests: 0, passed: 0, failed: 0 }
+};
 
-  console.log('📦 Component Integration Tests:');
+function logTest(phase, testName, status, details = '') {
+  const icon = status === 'PASS' ? '✅' : status === 'FAIL' ? '❌' : '⚠️';
+  console.log(`${icon} ${phase}: ${testName} - ${status}`);
+  if (details) console.log(`   Details: ${details}`);
   
-  components.forEach(component => {
-    const filePath = path.join(componentsDir, component);
-    
-    if (fs.existsSync(filePath)) {
-      const content = fs.readFileSync(filePath, 'utf8');
-      
-      // Check for essential imports
-      const hasFramerMotion = content.includes('framer-motion');
-      const hasLucideIcons = content.includes('lucide-react');
-      const hasCnUtils = content.includes('@/lib/utils');
-      const hasTypeScript = content.includes('interface') || content.includes('type');
-      
-      console.log(`✅ ${component}:`);
-      console.log(`   - Framer Motion: ${hasFramerMotion ? '✅' : '❌'}`);
-      console.log(`   - Lucide Icons: ${hasLucideIcons ? '✅' : '❌'}`);
-      console.log(`   - Utils: ${hasCnUtils ? '✅' : '❌'}`);
-      console.log(`   - TypeScript: ${hasTypeScript ? '✅' : '❌'}`);
-      
-      // Count exports
-      const exports = (content.match(/export (function|const|interface|type)/g) || []).length;
-      console.log(`   - Exports: ${exports} components/types\n`);
-      
-    } else {
-      console.log(`❌ ${component}: File not found\n`);
-    }
-  });
+  testResults[phase].tests++;
+  if (status === 'PASS') testResults[phase].passed++;
+  else if (status === 'FAIL') testResults[phase].failed++;
 }
 
-// Test Dashboard integration
-function testDashboardIntegration() {
-  console.log('🎯 Dashboard Integration Test:');
-  
-  const dashboardPath = 'client/src/pages/Dashboard.tsx';
-  if (fs.existsSync(dashboardPath)) {
-    const content = fs.readFileSync(dashboardPath, 'utf8');
-    
-    const hasEnhancedCards = content.includes('enhanced-card') || content.includes('StatCard');
-    const hasLoadingStates = content.includes('loading-states') || content.includes('LoadingCard');
-    const hasEnhancedLayout = content.includes('enhanced-layout') || content.includes('GridLayout');
-    const hasAnimations = content.includes('motion') || content.includes('framer-motion');
-    const hasGradients = content.includes('gradient');
-    
-    console.log(`✅ Dashboard.tsx Integration:`);
-    console.log(`   - Enhanced Cards: ${hasEnhancedCards ? '✅' : '❌'}`);
-    console.log(`   - Loading States: ${hasLoadingStates ? '✅' : '❌'}`);
-    console.log(`   - Enhanced Layout: ${hasEnhancedLayout ? '✅' : '❌'}`);
-    console.log(`   - Animations: ${hasAnimations ? '✅' : '❌'}`);
-    console.log(`   - Modern Gradients: ${hasGradients ? '✅' : '❌'}\n`);
-    
-  } else {
-    console.log('❌ Dashboard.tsx: File not found\n');
+// PHASE 1: Backend Optimization Tests
+console.log('\n📊 PHASE 1: Backend Optimization Tests');
+console.log('=' .repeat(50));
+
+// Test API endpoints responsiveness
+async function testBackendAPIs() {
+  try {
+    const response = await fetch('http://localhost:5000/api/dashboard/stats');
+    const status = response.status === 401 ? 'PASS' : 'FAIL'; // 401 expected without auth
+    logTest('phase1', 'API Endpoint Response', status, `Status: ${response.status}`);
+  } catch (error) {
+    logTest('phase1', 'API Endpoint Response', 'FAIL', `Error: ${error.message}`);
   }
 }
 
-// Test backend services
-function testBackendServices() {
-  console.log('⚙️ Backend Services Test:');
-  
-  const services = [
-    'server/services/cacheService.ts',
-    'server/services/rateLimitService.ts', 
-    'server/middlewares/performanceMonitor.ts',
-    'server/services/databaseOptimizationService.ts'
-  ];
-
-  services.forEach(servicePath => {
-    if (fs.existsSync(servicePath)) {
-      const content = fs.readFileSync(servicePath, 'utf8');
-      const hasExports = content.includes('export');
-      const hasTypes = content.includes('interface') || content.includes('type');
-      const hasAsync = content.includes('async');
-      
-      console.log(`✅ ${path.basename(servicePath)}:`);
-      console.log(`   - Exports: ${hasExports ? '✅' : '❌'}`);
-      console.log(`   - Types: ${hasTypes ? '✅' : '❌'}`);
-      console.log(`   - Async Methods: ${hasAsync ? '✅' : '❌'}\n`);
-      
-    } else {
-      console.log(`❌ ${path.basename(servicePath)}: File not found\n`);
-    }
-  });
+// Test cache service availability
+try {
+  const fs = require('fs');
+  const cacheFile = fs.readFileSync('./server/services/cacheService.ts', 'utf8');
+  const hasExport = cacheFile.includes('getCacheService');
+  logTest('phase1', 'Cache Service Export', hasExport ? 'PASS' : 'FAIL', 'getCacheService export');
+} catch (error) {
+  logTest('phase1', 'Cache Service Export', 'FAIL', error.message);
 }
 
-// Check package dependencies
-function testPackageDependencies() {
-  console.log('📋 Package Dependencies Test:');
-  
-  const packagePath = 'package.json';
-  if (fs.existsSync(packagePath)) {
-    const packageContent = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-    const deps = { ...packageContent.dependencies, ...packageContent.devDependencies };
-    
-    const requiredPackages = [
-      'framer-motion',
-      'lucide-react', 
-      '@tanstack/react-query',
-      'wouter',
-      'tailwindcss',
-      'drizzle-orm',
-      'express',
-      'typescript'
-    ];
+// Test database schema
+try {
+  const schemaFile = require('fs').readFileSync('./shared/schema.ts', 'utf8');
+  const hasUsers = schemaFile.includes('users');
+  const hasPosts = schemaFile.includes('postAssets');
+  logTest('phase1', 'Database Schema', hasUsers && hasPosts ? 'PASS' : 'FAIL', 'Core tables present');
+} catch (error) {
+  logTest('phase1', 'Database Schema', 'FAIL', error.message);
+}
 
-    requiredPackages.forEach(pkg => {
-      const installed = deps[pkg] !== undefined;
-      console.log(`   ${pkg}: ${installed ? '✅' : '❌'} ${installed ? deps[pkg] : 'Not installed'}`);
-    });
-    
-  } else {
-    console.log('❌ package.json not found');
+// PHASE 2: UI/UX Improvements Tests
+console.log('\n🎨 PHASE 2: UI/UX Improvements Tests');
+console.log('=' .repeat(50));
+
+// Test component files existence
+const uiComponents = [
+  './client/src/components/ui/card.tsx',
+  './client/src/components/ui/button.tsx',
+  './client/src/components/ui/badge.tsx'
+];
+
+uiComponents.forEach(component => {
+  try {
+    const fs = require('fs');
+    fs.accessSync(component);
+    logTest('phase2', `Component: ${component.split('/').pop()}`, 'PASS', 'File exists');
+  } catch (error) {
+    logTest('phase2', `Component: ${component.split('/').pop()}`, 'FAIL', 'File missing');
   }
+});
+
+// Test dashboard implementation
+try {
+  const dashboardFile = require('fs').readFileSync('./client/src/pages/Dashboard.tsx', 'utf8');
+  const hasStatsCards = dashboardFile.includes('UserStats');
+  const hasAnimations = dashboardFile.includes('motion');
+  logTest('phase2', 'Dashboard Enhancement', hasStatsCards && hasAnimations ? 'PASS' : 'FAIL', 'Stats cards and animations');
+} catch (error) {
+  logTest('phase2', 'Dashboard Enhancement', 'FAIL', error.message);
 }
 
-// Generate integration report
-function generateIntegrationReport() {
-  console.log('\n📊 Integration Test Summary:');
-  console.log('='.repeat(50));
-  
-  const report = {
-    timestamp: new Date().toISOString(),
-    phase1_backend: 'Backend optimization services implemented',
-    phase2_frontend: 'Enhanced UI components created',
-    integration_status: 'Components ready for use',
-    next_steps: [
-      'PHASE 3: Mobile responsiveness optimization',
-      'PHASE 4: Performance monitoring dashboard',
-      'PHASE 5: Advanced AI content features'
-    ]
-  };
-  
-  fs.writeFileSync('integration-test-report.json', JSON.stringify(report, null, 2));
-  console.log('Report saved to: integration-test-report.json');
+// PHASE 3: Mobile Responsiveness Tests
+console.log('\n📱 PHASE 3: Mobile Responsiveness Tests');
+console.log('=' .repeat(50));
+
+// Test mobile components
+const mobileComponents = [
+  './client/src/components/ui/mobile-optimized.tsx',
+  './client/src/hooks/useMediaQuery.ts'
+];
+
+mobileComponents.forEach(component => {
+  try {
+    const fs = require('fs');
+    const content = fs.readFileSync(component, 'utf8');
+    const isMobileOptimized = content.includes('Mobile') || content.includes('Touch');
+    logTest('phase3', `Mobile Component: ${component.split('/').pop()}`, isMobileOptimized ? 'PASS' : 'FAIL', 'Mobile features detected');
+  } catch (error) {
+    logTest('phase3', `Mobile Component: ${component.split('/').pop()}`, 'FAIL', error.message);
+  }
+});
+
+// Test responsive breakpoints
+try {
+  const mediaQueryFile = require('fs').readFileSync('./client/src/hooks/useMediaQuery.ts', 'utf8');
+  const hasBreakpoints = mediaQueryFile.includes('768') && mediaQueryFile.includes('1024');
+  logTest('phase3', 'Responsive Breakpoints', hasBreakpoints ? 'PASS' : 'FAIL', 'Standard breakpoints defined');
+} catch (error) {
+  logTest('phase3', 'Responsive Breakpoints', 'FAIL', error.message);
 }
 
-// Run integration tests
-testComponentIntegration();
-testDashboardIntegration();
-testBackendServices();
-testPackageDependencies();
-generateIntegrationReport();
+// Test pull-to-refresh functionality
+try {
+  const dashboardFile = require('fs').readFileSync('./client/src/pages/Dashboard.tsx', 'utf8');
+  const hasPullToRefresh = dashboardFile.includes('PullToRefresh');
+  logTest('phase3', 'Pull-to-Refresh', hasPullToRefresh ? 'PASS' : 'FAIL', 'PullToRefresh component usage');
+} catch (error) {
+  logTest('phase3', 'Pull-to-Refresh', 'FAIL', error.message);
+}
+
+// PHASE 4: Real-time Features Tests
+console.log('\n⚡ PHASE 4: Real-time Features Tests');
+console.log('=' .repeat(50));
+
+// Test WebSocket service
+try {
+  const wsFile = require('fs').readFileSync('./server/services/websocketService.ts', 'utf8');
+  const hasJWT = wsFile.includes('jwt');
+  const hasRooms = wsFile.includes('joinRoom');
+  logTest('phase4', 'WebSocket Service', hasJWT && hasRooms ? 'PASS' : 'FAIL', 'JWT auth and room management');
+} catch (error) {
+  logTest('phase4', 'WebSocket Service', 'FAIL', error.message);
+}
+
+// Test WebSocket hooks
+try {
+  const hooksFile = require('fs').readFileSync('./client/src/hooks/useWebSocket.ts', 'utf8');
+  const hasUseWebSocket = hooksFile.includes('useWebSocket');
+  const hasRealtimeStats = hooksFile.includes('useRealtimeStats');
+  logTest('phase4', 'WebSocket Hooks', hasUseWebSocket && hasRealtimeStats ? 'PASS' : 'FAIL', 'Core hooks implemented');
+} catch (error) {
+  logTest('phase4', 'WebSocket Hooks', 'FAIL', error.message);
+}
+
+// Test real-time dashboard components
+try {
+  const realtimeFile = require('fs').readFileSync('./client/src/components/ui/realtime-dashboard.tsx', 'utf8');
+  const hasConnectionStatus = realtimeFile.includes('RealtimeConnectionStatus');
+  const hasLiveMetrics = realtimeFile.includes('LiveMetricsCard');
+  logTest('phase4', 'Real-time Components', hasConnectionStatus && hasLiveMetrics ? 'PASS' : 'FAIL', 'Real-time UI components');
+} catch (error) {
+  logTest('phase4', 'Real-time Components', 'FAIL', error.message);
+}
+
+// Test real-time integration in dashboard
+try {
+  const dashboardFile = require('fs').readFileSync('./client/src/pages/Dashboard.tsx', 'utf8');
+  const hasRealtimeImport = dashboardFile.includes('useRealtimeStats');
+  const hasLiveComponents = dashboardFile.includes('LiveMetricsCard');
+  logTest('phase4', 'Dashboard Real-time Integration', hasRealtimeImport && hasLiveComponents ? 'PASS' : 'FAIL', 'Real-time features integrated');
+} catch (error) {
+  logTest('phase4', 'Dashboard Real-time Integration', 'FAIL', error.message);
+}
+
+// Execute async tests
+testBackendAPIs();
+
+// Generate final test report
+setTimeout(() => {
+  console.log('\n📋 TEST SUMMARY REPORT');
+  console.log('=' .repeat(60));
+  
+  let totalTests = 0, totalPassed = 0, totalFailed = 0;
+  
+  Object.entries(testResults).forEach(([phaseKey, phase]) => {
+    const successRate = phase.tests > 0 ? Math.round((phase.passed / phase.tests) * 100) : 0;
+    const status = successRate >= 80 ? '✅' : successRate >= 60 ? '⚠️' : '❌';
+    
+    console.log(`${status} ${phase.name}: ${phase.passed}/${phase.tests} tests passed (${successRate}%)`);
+    
+    totalTests += phase.tests;
+    totalPassed += phase.passed;
+    totalFailed += phase.failed;
+  });
+  
+  const overallSuccess = totalTests > 0 ? Math.round((totalPassed / totalTests) * 100) : 0;
+  const overallStatus = overallSuccess >= 80 ? '✅' : overallSuccess >= 60 ? '⚠️' : '❌';
+  
+  console.log('\n' + '=' .repeat(60));
+  console.log(`${overallStatus} OVERALL: ${totalPassed}/${totalTests} tests passed (${overallSuccess}%)`);
+  
+  if (overallSuccess >= 80) {
+    console.log('\n🎉 SocialSparkAI phases are working well! Ready for next phase.');
+  } else if (overallSuccess >= 60) {
+    console.log('\n⚠️ Most features working, minor fixes needed.');
+  } else {
+    console.log('\n🔧 Significant issues detected, fixes required.');
+  }
+  
+  console.log('\n✅ Component Integration Test Complete');
+}, 1000);

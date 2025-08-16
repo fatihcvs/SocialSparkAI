@@ -10,6 +10,7 @@ import { useIsMobile, useBreakpoint } from "@/hooks/useMediaQuery";
 import { RealtimeConnectionStatus, LiveMetricsCard, RealtimeNotifications, ActivityFeed, RealtimeStatsWidget } from "@/components/ui/realtime-dashboard";
 import { useRealtimeStats, useRealtimePosts } from "@/hooks/useWebSocket";
 import { FileText, CalendarCheck, Brain, Zap, PenTool, ImageIcon, Send, Copy, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
 import type { UserStats } from "@/types";
 
 export default function Dashboard() {

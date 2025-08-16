@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { cacheService } from "./cacheService";
+import cacheService from "./cacheService";
 import { rateLimitService } from "./rateLimitService";
 
 // The newest OpenAI model is "gpt-4o" (released May 13, 2024).

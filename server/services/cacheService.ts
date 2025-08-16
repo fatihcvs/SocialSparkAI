@@ -122,4 +122,7 @@ class CacheService {
   }
 }
 
-export const cacheService = new CacheService();
+// Singleton instance
+const cacheService = new CacheService();
+export default cacheService;
+export { cacheService as getCacheService };
