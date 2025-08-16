@@ -12,6 +12,8 @@ import { rateLimit as apiRateLimit, ipRateLimit } from "./middlewares/rateLimite
 import { openaiService } from "./services/openaiService";
 import { contentService } from "./services/contentService";
 import { iyzicoService } from "./services/iyzicoService";
+import { userBehaviorService } from "./services/userBehaviorService";
+import { advancedAIService } from "./services/advancedAIService";
 import type { AuthRequest } from "./middlewares/auth";
 import integrationRoutes from "./routes/integrations";
 import { registerPerformanceRoutes } from "./routes/performance.js";
@@ -506,6 +508,200 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Get content ideas error:", error);
       res.status(500).json({
         error: { code: "INTERNAL_ERROR", message: "İçerik fikirleri alınamadı" }
+      });
+    }
+  });
+
+  // PHASE 5: Advanced AI Features Routes
+  
+  // Generate personalized content
+  app.post("/api/ai/personalized-content", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { prompt, platform, contentType } = req.body;
+      
+      if (!prompt || !platform) {
+        return res.status(400).json({
+          error: { code: "INVALID_INPUT", message: "Prompt ve platform gerekli" }
+        });
+      }
+
+      const result = await advancedAIService.generatePersonalizedContent(
+        req.user!.id,
+        prompt,
+        platform,
+        contentType || 'post'
+      );
+
+      res.json(result);
+    } catch (error) {
+      console.error("Personalized content generation error:", error);
+      res.status(500).json({
+        error: { code: "AI_ERROR", message: "Kişiselleştirilmiş içerik oluşturulamadı" }
+      });
+    }
+  });
+
+  // Generate multi-modal content
+  app.post("/api/ai/multi-modal", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { contentType, topic, platform, duration } = req.body;
+      
+      if (!contentType || !topic || !platform) {
+        return res.status(400).json({
+          error: { code: "INVALID_INPUT", message: "İçerik türü, konu ve platform gerekli" }
+        });
+      }
+
+      const result = await advancedAIService.generateMultiModalContent(
+        req.user!.id,
+        contentType,
+        topic,
+        platform,
+        duration
+      );
+
+      res.json(result);
+    } catch (error) {
+      console.error("Multi-modal content generation error:", error);
+      res.status(500).json({
+        error: { code: "AI_ERROR", message: "Multi-modal içerik oluşturulamadı" }
+      });
+    }
+  });
+
+  // Score content quality
+  app.post("/api/ai/score-content", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { content, platform } = req.body;
+      
+      if (!content || !platform) {
+        return res.status(400).json({
+          error: { code: "INVALID_INPUT", message: "İçerik ve platform gerekli" }
+        });
+      }
+
+      const scoring = await advancedAIService.scoreContent(
+        req.user!.id,
+        content,
+        platform
+      );
+
+      res.json(scoring);
+    } catch (error) {
+      console.error("Content scoring error:", error);
+      res.status(500).json({
+        error: { code: "AI_ERROR", message: "İçerik skorlanamadı" }
+      });
+    }
+  });
+
+  // Get A/B test recommendations
+  app.post("/api/ai/ab-test", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { content, platform } = req.body;
+      
+      if (!content || !platform) {
+        return res.status(400).json({
+          error: { code: "INVALID_INPUT", message: "İçerik ve platform gerekli" }
+        });
+      }
+
+      const recommendations = await advancedAIService.generateABTestRecommendations(
+        req.user!.id,
+        content,
+        platform
+      );
+
+      res.json(recommendations);
+    } catch (error) {
+      console.error("A/B test recommendations error:", error);
+      res.status(500).json({
+        error: { code: "AI_ERROR", message: "A/B test önerileri oluşturulamadı" }
+      });
+    }
+  });
+
+  // Get personalized suggestions
+  app.get("/api/ai/personalized-suggestions", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { contentType } = req.query;
+      
+      const suggestions = await userBehaviorService.getPersonalizedSuggestions(
+        req.user!.id,
+        contentType as string || 'post'
+      );
+
+      res.json(suggestions);
+    } catch (error) {
+      console.error("Personalized suggestions error:", error);
+      res.status(500).json({
+        error: { code: "AI_ERROR", message: "Kişiselleştirilmiş öneriler alınamadı" }
+      });
+    }
+  });
+
+  // Track user interaction
+  app.post("/api/ai/track-interaction", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { contentType, action, contentData } = req.body;
+      
+      if (!contentType || !action) {
+        return res.status(400).json({
+          error: { code: "INVALID_INPUT", message: "İçerik türü ve aksiyon gerekli" }
+        });
+      }
+
+      await userBehaviorService.trackInteraction({
+        userId: req.user!.id,
+        contentType,
+        action,
+        contentData: contentData || {},
+        timestamp: new Date()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Track interaction error:", error);
+      res.status(500).json({
+        error: { code: "AI_ERROR", message: "Etkileşim kaydedilemedi" }
+      });
+    }
+  });
+
+  // Get performance analysis
+  app.get("/api/ai/performance-analysis", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const analysis = await userBehaviorService.analyzePerformanceHistory(req.user!.id);
+      res.json(analysis);
+    } catch (error) {
+      console.error("Performance analysis error:", error);
+      res.status(500).json({
+        error: { code: "AI_ERROR", message: "Performans analizi alınamadı" }
+      });
+    }
+  });
+
+  // Get industry templates
+  app.get("/api/ai/industry-templates", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { industry, contentType } = req.query;
+      
+      if (!industry) {
+        return res.status(400).json({
+          error: { code: "INVALID_INPUT", message: "Sektör bilgisi gerekli" }
+        });
+      }
+
+      const template = advancedAIService.getIndustryTemplate(
+        industry as string,
+        contentType as string || 'post'
+      );
+
+      res.json(template);
+    } catch (error) {
+      console.error("Industry templates error:", error);
+      res.status(500).json({
+        error: { code: "AI_ERROR", message: "Sektör şablonları alınamadı" }
       });
     }
   });

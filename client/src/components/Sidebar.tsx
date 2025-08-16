@@ -13,7 +13,8 @@ import {
   CreditCard,
   Settings,
   Shield,
-  Activity
+  Activity,
+  Sparkles
 } from "lucide-react";
 
 const navigation = [
@@ -21,6 +22,7 @@ const navigation = [
   { name: "İçerik Takvimi", href: "/calendar", icon: Calendar },
   { name: "Gönderiler", href: "/posts", icon: FileText },
   { name: "AI İçerik Üret", href: "/ai-content", icon: Brain },
+  { name: "Gelişmiş AI", href: "/advanced-ai", icon: Sparkles },
   { name: "Görsel Oluştur", href: "/image-generation", icon: Image },
   { name: "Zapier Entegrasyonu", href: "/zapier-integration", icon: Share2 },
   { name: "Admin Paneli", href: "/admin", icon: Shield, admin: true },

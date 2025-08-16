@@ -19,7 +19,8 @@ import {
   LazySocialPublishing,
   LazyBilling,
   LazySettings,
-  LazyAdmin
+  LazyAdmin,
+  LazyAdvancedAI
 } from "@/components/LazyComponents";
 
 // Layout components
@@ -63,6 +64,7 @@ function Router() {
             <Route path="/social-publishing" component={LazySocialPublishing} />
             <Route path="/billing" component={LazyBilling} />
             <Route path="/settings" component={LazySettings} />
+            <Route path="/advanced-ai" component={LazyAdvancedAI} />
             <Route path="/admin" component={LazyAdmin} />
             <Route component={NotFound} />
           </Switch>
