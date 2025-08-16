@@ -58,7 +58,7 @@ class DatabaseOptimizationService {
       order = 'desc'
     } = options;
 
-    let query = this.db.select().from(contentIdeas);
+    let query: any = this.db.select().from(contentIdeas);
 
     // Apply filters
     const conditions = [];
@@ -89,7 +89,7 @@ class DatabaseOptimizationService {
     // Apply pagination
     query = query.limit(limit).offset(offset);
 
-    return query;
+    return await query;
   }
 
   /**

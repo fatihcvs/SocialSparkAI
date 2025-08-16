@@ -1,6 +1,6 @@
 import { rateLimit } from 'express-rate-limit';
 import { Request, Response } from 'express';
-import { cacheService } from '../services/cacheService';
+import cacheService from '../services/cacheService';
 
 interface RateLimitRequest extends Request {
   user?: {
