@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MobileCard, TouchButton, ResponsiveGrid, PullToRefresh } from "@/components/ui/mobile-optimized";
 import { useIsMobile, useBreakpoint } from "@/hooks/useMediaQuery";
+import { RealtimeConnectionStatus, LiveMetricsCard, RealtimeNotifications, ActivityFeed, RealtimeStatsWidget } from "@/components/ui/realtime-dashboard";
+import { useRealtimeStats, useRealtimePosts } from "@/hooks/useWebSocket";
 import { FileText, CalendarCheck, Brain, Zap, PenTool, ImageIcon, Send, Copy, TrendingUp } from "lucide-react";
 import type { UserStats } from "@/types";
 
@@ -17,6 +19,10 @@ export default function Dashboard() {
   
   const isMobile = useIsMobile();
   const { current: breakpoint } = useBreakpoint();
+  
+  // Initialize real-time connections
+  useRealtimeStats();
+  useRealtimePosts();
 
   const handleRefresh = async () => {
     await refetch();
@@ -183,6 +189,15 @@ export default function Dashboard() {
           </TouchButton>
         </ResponsiveGrid>
       </MobileCard>
+
+      {/* Real-time Features Section */}
+      <ResponsiveGrid 
+        columns={{ xs: 1, md: 2 }}
+        gap={isMobile ? 4 : 6}
+      >
+        <LiveMetricsCard />
+        <ActivityFeed />
+      </ResponsiveGrid>
 
       {/* Mobile-Optimized Main Content */}
       <ResponsiveGrid 
